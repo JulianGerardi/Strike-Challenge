@@ -1,20 +1,29 @@
-import { Check } from 'lucide-react'
 import type { ExerciseDraft } from '../data'
 import { formatDate } from '../data'
 import { Badge } from '../components/ui'
 
+// Pixel confetti offsets for the burst around the tick
+const BURST = [[-52, -30], [52, -34], [-44, 36], [56, 28], [0, -58], [-62, 4], [64, -2], [8, 60]]
+
 export function ExerciseCreated({ id, draft, assetCount, customCount }: { id: string; draft: ExerciseDraft; assetCount: number; customCount: number }) {
   return (
     <div className="flex flex-col items-center pt-[64px]">
-      <div className="relative size-[64px] fade-up">
-        <span className="absolute left-[8px] top-[8px] size-[64px] bg-[#d9f7f8]" />
-        <span className="absolute inset-0 grid place-items-center bg-brand"><Check size={26} strokeWidth={1.75} /></span>
+      <div className="relative size-[64px]">
+        <span className="done-shadow absolute left-[8px] top-[8px] size-[64px] bg-[#d9f7f8]" />
+        {BURST.map(([dx, dy], i) => (
+          <span key={i} className="done-px absolute left-[29px] top-[29px] size-[6px] bg-brand" style={{ '--dx': `${dx}px`, '--dy': `${dy}px` } as React.CSSProperties} />
+        ))}
+        <span className="done-box absolute inset-0 grid place-items-center bg-brand">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#111315" strokeWidth="1.9" strokeLinecap="square" strokeLinejoin="miter">
+            <path className="done-check" d="M4.5 12.5l5 5L19.5 7" />
+          </svg>
+        </span>
       </div>
-      <h1 className="mt-[34px] text-[30px] leading-[36px] font-medium tracking-[-0.3px]">Exercise created</h1>
+      <h1 className="mt-[34px] text-center text-[24px] leading-[30px] sm:text-[30px] sm:leading-[36px] font-medium tracking-[-0.3px]">Exercise created</h1>
       <p className="mt-[10px] max-w-[364px] text-center text-[12px] leading-[19px] text-[#73787a]">
         Your exercise has been created. Review its configuration before coordinating the testing activities.
       </p>
-      <div data-tour="created-card" className="mt-[20px] w-full bg-white px-[20px] py-[32px] fade-up">
+      <div data-tour="created-card" className="mt-[20px] w-full bg-white px-[14px] sm:px-[20px] py-[24px] sm:py-[32px] fade-up">
         <div className="flex items-stretch">
           <div className="flex-1 px-[16px] py-[12px] bg-[#b6f8fa] border-l-[4px] border-[#145c62]">
             <p className="text-[8px] uppercase tracking-[0.3px]">Security exercise</p>
@@ -22,10 +31,10 @@ export function ExerciseCreated({ id, draft, assetCount, customCount }: { id: st
           </div>
           <div className="grid place-items-center px-[14px] bg-[#effcfd]"><Badge>Complete</Badge></div>
         </div>
-        <div className="grid grid-cols-3 gap-y-[22px] px-[14px] pt-[36px]">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-[12px] gap-y-[22px] px-[6px] sm:px-[14px] pt-[28px] sm:pt-[36px]">
           {[
             ['Exercise ID', id],
-            ['Assets included', `${assetCount} assets`],
+            ['Assets included', `${assetCount} ${assetCount === 1 ? 'asset' : 'assets'}`],
             ['Testing depth', draft.depth],
             ['Scheduled dates', `${formatDate(draft.startDate)} – ${formatDate(draft.endDate)}`],
             ['Human validation', draft.humanValidation ? 'Requested' : 'Not requested'],

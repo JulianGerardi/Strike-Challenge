@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { PixelIcon, type PixelIconName } from './PixelIcon'
 import { ArrowRight, Check, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ')
@@ -87,9 +88,9 @@ export function Checkbox({ checked, indeterminate, onChange, label, className }:
 
 export function PageHeader({ title, caption, action }: { title: string; caption: string; action?: ReactNode }) {
   return (
-    <div className="flex items-center justify-between w-full">
+    <div className="flex flex-wrap items-center justify-between gap-[14px] w-full">
       <div>
-        <h1 className="text-[27px] leading-[31px] font-[450] font-medium tracking-[-0.04px] text-ink">{title}</h1>
+        <h1 className="text-[22px] leading-[27px] sm:text-[27px] sm:leading-[31px] font-[450] font-medium tracking-[-0.04px] text-ink">{title}</h1>
         <p className="pt-[3px] text-[11px] leading-[17px] text-[#73787a] tracking-[-0.2px]">{caption}</p>
       </div>
       {action}
@@ -136,10 +137,10 @@ export function Stepper({ active, onGo, editing }: { active: number; onGo?: (i: 
                     i + 1
                   )}
                 </span>
-                <span className={cx('text-[10px] leading-[15px] font-medium uppercase tracking-[-0.016px] whitespace-nowrap transition-colors duration-500', done ? 'text-brand-dark' : current ? 'text-ink' : 'text-[#8b9092]')}>{label}</span>
+                <span className={cx('text-[10px] leading-[15px] font-medium uppercase tracking-[-0.016px] whitespace-nowrap transition-colors duration-500', !current && 'hidden sm:inline', done ? 'text-brand-dark' : current ? 'text-ink' : 'text-[#8b9092]')}>{label}</span>
               </button>
               {i < STEPS.length - 1 && (
-                <span className="relative flex-1 h-px mx-[16px] bg-[#d7d9da] overflow-hidden">
+                <span className="relative flex-1 h-px mx-[8px] sm:mx-[16px] bg-[#d7d9da] overflow-hidden">
                   <span
                     className={cx('absolute inset-0 origin-left transition-transform duration-700 ease-[cubic-bezier(.65,0,.35,1)]', i + 1 === active ? 'bg-brand' : 'bg-brand-dark')}
                     style={{ transform: `scaleX(${i < active || editing ? 1 : 0})` }}
@@ -225,20 +226,18 @@ export function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: 
 
 /* ---------- Sections ---------- */
 
-export function SectionIcon() {
+export function SectionIcon({ name = 'target' }: { name?: PixelIconName }) {
   return (
-    <span className="grid place-items-center w-[31px] h-[29px] bg-brand shrink-0">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#111315" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 12a9 9 0 1 1-9-9" /><path d="M16 3h5v5" /><path d="m21 3-9 9" />
-      </svg>
+    <span className="section-icon grid place-items-center size-[32px] bg-brand shrink-0">
+      <PixelIcon name={name} size={20} />
     </span>
   )
 }
 
-export function SectionTitle({ title, caption, right }: { title: string; caption: string; right?: ReactNode }) {
+export function SectionTitle({ title, caption, right, icon }: { title: string; caption: string; right?: ReactNode; icon?: PixelIconName }) {
   return (
-    <div className="flex items-center gap-[8px]">
-      <SectionIcon />
+    <div className="flex items-center gap-[10px]">
+      <SectionIcon name={icon} />
       <div className="flex-1">
         <p className="text-[13px] leading-[20px] font-semibold tracking-[-0.1px] text-ink">{title}</p>
         <p className="pt-[2px] text-[10px] leading-[15px] text-[#666b6e] tracking-[-0.2px]">{caption}</p>
@@ -265,7 +264,7 @@ export function Pagination({ page, pageSize, total, onPage, noun }: { page: numb
   return (
     <div className="flex items-center justify-between min-h-[52px] px-[16px] py-[8px] border-t border-[#e7e7e7] bg-white">
       <p className="text-[12px] leading-[16px] font-semibold text-[#71717a]">
-        {total === 0 ? `No ${noun.toLowerCase()} match your filters` : `Showing ${from} to ${to} of ${total} ${noun}`}
+        {total === 0 ? `No ${noun.toLowerCase()} match your filters` : `Showing ${from} to ${to} of ${total} ${noun.toLowerCase()}`}
       </p>
       <div className="flex items-center gap-[4px]">
         <button disabled={page <= 1} onClick={() => onPage(page - 1)} className="grid place-items-center size-[28px] rounded-[6px] disabled:opacity-40 hover:bg-black/5" aria-label="Previous page">

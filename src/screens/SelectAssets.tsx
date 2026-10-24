@@ -41,7 +41,8 @@ export function SelectAssets({ selected, setSelected, showErrors }: { selected: 
       />
       {showErrors && selected.length === 0 && <p className="text-[11px] text-[#c23b3b] -mt-[8px]">Select at least one asset to continue.</p>}
       <div data-tour="assets-table" className="bg-white border border-[#e5e5e5] rounded-[6px] overflow-hidden">
-        <table className="w-full border-collapse">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[720px] border-collapse">
           <thead>
             <tr>
               <Th className="w-[42px]"><Checkbox checked={allOn} indeterminate={!allOn && someOn} onChange={toggleAll} /></Th>
@@ -76,7 +77,8 @@ export function SelectAssets({ selected, setSelected, showErrors }: { selected: 
             })}
           </tbody>
         </table>
-        <Pagination page={page} pageSize={PAGE_SIZE} total={api.filtered.length} onPage={setPage} noun="Assets" />
+        </div>
+        <Pagination page={page} pageSize={PAGE_SIZE} total={api.filtered.length} onPage={setPage} noun="assets" />
       </div>
     </>
   )

@@ -7,11 +7,11 @@ function Section({ title, onEdit, children, tour }: { title: string; onEdit: () 
 
   return (
     <section data-tour={tour} className="bg-white">
-      <div className="flex items-center justify-between h-[66px] px-[21px] bg-[#effbfb]">
+      <div className="flex items-center justify-between h-[56px] sm:h-[66px] px-[16px] sm:px-[21px] bg-[#effbfb]">
         <h3 className="text-[13px] font-medium">{title}</h3>
         <button data-tour={tour ? `${tour}-edit` : undefined} onClick={onEdit} className="text-[10px] font-bold uppercase tracking-[0.3px] underline underline-offset-2 hover:text-[#2b9ea2]">Edit</button>
       </div>
-      <div className="px-[21px] py-[20px]">{children}</div>
+      <div className="px-[16px] sm:px-[21px] py-[20px]">{children}</div>
     </section>
   )
 }
@@ -45,12 +45,12 @@ export function Review({ draft, shared, selectedIds, overrides, onEditStep, onEd
   return (
     <>
       <PageHeader title="Review exercise" caption="Confirm the scope and configuration before creating your exercise." />
-      <div className="grid grid-cols-[1fr_280px] gap-[22px] items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-[22px] items-start">
         <div className="flex flex-col gap-[14px]">
           <Section title="Exercise details" onEdit={() => onEditStep(0)} tour="review-details">
-            <div className="grid grid-cols-2 gap-x-[24px] gap-y-[18px]">
-              <div className="col-span-2"><KV k="Exercise name" v={draft.name || '—'} /></div>
-              <div className="col-span-2"><KV k="Objective" v={draft.objective || '—'} /></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-[24px] gap-y-[18px]">
+              <div className="sm:col-span-2"><KV k="Exercise name" v={draft.name || '—'} /></div>
+              <div className="sm:col-span-2"><KV k="Objective" v={draft.objective || '—'} /></div>
               <KV k="Testing depth" v={draft.depth} />
               <KV k="Dates" v={`${formatDate(draft.startDate)} – ${formatDate(draft.endDate)}`} />
               <KV k="Recurrence" v={draft.recurrence} />
@@ -60,7 +60,7 @@ export function Review({ draft, shared, selectedIds, overrides, onEditStep, onEd
           </Section>
 
           <Section title="Scope" onEdit={() => onEditStep(1)} tour="review-scope">
-            <div className="flex border-y border-[#e5e5e5] py-[12px] mb-[8px]">
+            <div className="flex flex-wrap gap-y-[10px] border-y border-[#e5e5e5] py-[12px] mb-[8px]">
               {[['Assets in scope', assets.length] as const, ...types.map(t => [t, assets.filter(a => a.type === t).length] as const)].map(([k, n], i) => (
                 <div key={k} className={cx('px-[24px] first:pl-[8px]', i < 3 && 'border-r border-[#e5e5e5]')}>
                   <p className="text-[16px] font-semibold">{n}</p>
@@ -80,7 +80,7 @@ export function Review({ draft, shared, selectedIds, overrides, onEditStep, onEd
           </Section>
 
           <Section title="Shared configuration" onEdit={() => onEditStep(2)}>
-            <div className="grid grid-cols-2 gap-x-[24px] gap-y-[18px]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-[24px] gap-y-[18px]">
               <KV k="Default rate limit" v={`${shared.rateLimit} requests per second`} />
               <KV k="VPN access" v={shared.vpnRequired ? 'Required' : 'Not required'} />
               <KV k="Excluded tests" v={excludedLabel(shared.excludedTests)} />
@@ -105,7 +105,7 @@ export function Review({ draft, shared, selectedIds, overrides, onEditStep, onEd
           </Section>
         </div>
 
-        <aside data-tour="readiness" className="sticky top-[64px] bg-white">
+        <aside data-tour="readiness" className="lg:sticky top-[64px] bg-white -order-1 lg:order-none">
           <div className={cx('flex items-center gap-[14px] px-[20px] py-[14px] border-l-[4px]', ready ? 'bg-[#e8f8ef] border-[#1f9d6b]' : 'bg-[#fff6e9] border-[#e0a14a]')}>
             <span className="grid place-items-center size-[38px] bg-white">{ready ? <Check size={18} className="text-[#1f9d6b]" /> : <TriangleAlert size={18} className="text-[#c27a17]" />}</span>
             <div>

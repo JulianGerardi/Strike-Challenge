@@ -9,7 +9,7 @@ const DEPTHS: { id: Depth; text: string; recommended?: boolean }[] = [
   { id: 'Comprehensive', text: 'Deeper testing across the agreed scope.' },
 ]
 
-const card = 'bg-white rounded-[2px] p-[22px] flex flex-col gap-[20px]'
+const card = 'bg-white rounded-[2px] p-[16px] sm:p-[22px] flex flex-col gap-[20px]'
 
 function IconInput({ icon, type, value, onChange, placeholder, tour }: { icon: React.ReactNode; type: 'date' | 'time'; value: string; onChange: (v: string) => void; placeholder: string; tour?: string }) {
   return (
@@ -30,7 +30,7 @@ export function ExerciseDetails({ draft, setDraft, showErrors }: { draft: Exerci
       <PageHeader title="Create security exercise" caption="Define the scope and coordinate testing across multiple assets." />
 
       <section data-tour="details" className={card}>
-        <SectionTitle title="Exercise details" caption="Give your team a clear, recognizable definition of this engagement." />
+        <SectionTitle icon="target" title="Exercise details" caption="Give your team a clear, recognizable definition of this engagement." />
         <div>
           <FieldLabel>Exercise name</FieldLabel>
           <input
@@ -56,8 +56,8 @@ export function ExerciseDetails({ draft, setDraft, showErrors }: { draft: Exerci
       </section>
 
       <section data-tour="depth" className={card}>
-        <SectionTitle title="Testing depth" caption="Choose the level of coverage for the agreed scope." />
-        <div role="radiogroup" data-tour="depth-options" className="grid grid-cols-3 gap-[11px]">
+        <SectionTitle icon="depth" title="Testing depth" caption="Choose the level of coverage for the agreed scope." />
+        <div role="radiogroup" data-tour="depth-options" className="grid grid-cols-1 sm:grid-cols-3 gap-[11px]">
           {DEPTHS.map(d => {
             const on = draft.depth === d.id
             return (
@@ -66,7 +66,7 @@ export function ExerciseDetails({ draft, setDraft, showErrors }: { draft: Exerci
                 role="radio"
                 aria-checked={on}
                 onClick={() => set('depth', d.id)}
-                className={cx('relative text-left min-h-[132px] p-[15px] border flex flex-col transition-colors', on ? 'bg-[#eefcfc] border-[#53cdd2] shadow-[inset_3px_0_0_#53cdd2]' : 'bg-white border-[#dedede] hover:border-[#b5dfe1]')}
+                className={cx('relative text-left sm:min-h-[132px] p-[15px] border flex flex-col transition-colors', on ? 'bg-[#eefcfc] border-[#53cdd2] shadow-[inset_3px_0_0_#53cdd2]' : 'bg-white border-[#dedede] hover:border-[#b5dfe1]')}
               >
                 <span className="pt-[4px] text-[13px] leading-[20px] font-bold tracking-[-0.2px]">{d.id}</span>
                 <span className="pt-[7px] pr-[24px] pb-[12px] text-[10px] leading-[15px] text-[#666b6e]">{d.text}</span>
@@ -81,8 +81,8 @@ export function ExerciseDetails({ draft, setDraft, showErrors }: { draft: Exerci
       </section>
 
       <section data-tour="schedule" className={card}>
-        <SectionTitle title="Schedule" caption="Set when testing activity is allowed to occur." />
-        <div className="grid grid-cols-3 gap-[14px]">
+        <SectionTitle icon="schedule" title="Schedule" caption="Set when testing activity is allowed to occur." />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[14px]">
           <div><FieldLabel>Start date</FieldLabel><IconInput tour="start-date" type="date" icon={<CalendarDays size={16} />} value={draft.startDate} onChange={v => set('startDate', v)} placeholder="Pick a date" /></div>
           <div>
             <FieldLabel>End date</FieldLabel>
@@ -98,6 +98,7 @@ export function ExerciseDetails({ draft, setDraft, showErrors }: { draft: Exerci
 
       <section data-tour="validation" className={cx(card, 'gap-[17px]')}>
         <SectionTitle
+          icon="validation"
           title="Include human hacker validation"
           caption="Add expert validation to complement automated findings."
           right={<span data-tour="validation-toggle" className="inline-flex"><Toggle checked={draft.humanValidation} onChange={v => set('humanValidation', v)} /></span>}

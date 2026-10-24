@@ -3,6 +3,7 @@ import { Check, Clock, Pencil, SlidersHorizontal, TriangleAlert, X } from 'lucid
 import type { Asset, AssetOverrides, ExerciseDraft, SharedConfig, TimeWindow } from '../data'
 import { ASSETS, EXCLUDABLE_TESTS, RATE_LIMITS, effective, excludedLabel, formatDate, hasOverrides } from '../data'
 import { AssetMark, Badge, Button, Checkbox, FieldLabel, PageHeader, Segmented, Select, Td, Th, cx, inputClass } from '../components/ui'
+import { PixelIcon } from '../components/PixelIcon'
 import { TableToolbar, useTableFilters, type FilterGroup } from '../components/TableToolbar'
 
 type FieldKey = keyof AssetOverrides
@@ -72,14 +73,14 @@ function Modal({ title, caption, children, onClose, footer, tourId }: { title: s
     return () => document.removeEventListener('keydown', k)
   }, [onClose])
   return (
-    <div className="fixed inset-0 z-40 bg-[#111315]/40 grid place-items-center p-[24px]" onMouseDown={e => e.target === e.currentTarget && onClose()}>
-      <div data-tour={tourId} role="dialog" aria-modal="true" aria-label={title} className="fade-up w-[620px] max-w-full max-h-[calc(100vh-48px)] flex flex-col bg-white shadow-[0_24px_64px_rgba(17,19,21,.25)]">
-        <div className="relative px-[24px] pt-[24px] pb-[20px] bg-[#f7f7f7] border-b border-[#e5e5e5]">
+    <div className="fixed inset-0 z-40 bg-[#111315]/40 grid place-items-center p-[12px] sm:p-[24px]" onMouseDown={e => e.target === e.currentTarget && onClose()}>
+      <div data-tour={tourId} role="dialog" aria-modal="true" aria-label={title} className="fade-up w-full max-w-[620px] max-h-[calc(100vh-48px)] flex flex-col bg-white shadow-[0_24px_64px_rgba(17,19,21,.25)]">
+        <div className="relative px-[16px] sm:px-[24px] pt-[24px] pb-[20px] bg-[#f7f7f7] border-b border-[#e5e5e5]">
           <h2 className="text-[18px] leading-[24px] font-medium">{title}</h2>
           <p className="mt-[6px] text-[11px] text-[#666b6e]">{caption}</p>
           <button onClick={onClose} aria-label="Close" className="absolute right-[22px] top-[24px] text-[#505557] hover:text-ink"><X size={18} /></button>
         </div>
-        <div className="overflow-auto px-[24px] py-[18px]">{children}</div>
+        <div className="overflow-auto px-[16px] sm:px-[24px] py-[18px]">{children}</div>
         <div className="flex justify-end gap-[8px] px-[18px] py-[12px] bg-[#f3f3f2]">{footer}</div>
       </div>
     </div>
@@ -103,7 +104,7 @@ export function BulkEditModal({ count, shared, changes, setChanges, onClose, onS
             c.mode === 'Apply new' ? 'Replace this field for every selected asset.' : c.mode === 'Reset' ? `Return every selected asset to the exercise default (${f === 'rateLimit' ? `${shared.rateLimit} req/s` : f === 'vpnRequired' ? vpnText(shared.vpnRequired) : f === 'window' ? windowText(shared.window) : excludedLabel(shared.excludedTests)}).` : 'Leave each selected asset unchanged.'
           return (
             <div key={f} className="py-[14px] flex flex-col gap-[12px]">
-              <div className="flex items-start justify-between gap-[12px]">
+              <div className="flex flex-wrap sm:flex-nowrap items-start justify-between gap-[12px]">
                 <div>
                   <p className="text-[12px] font-semibold">{FIELD_LABEL[f]}</p>
                   <p className="mt-[6px] text-[9px] text-[#969a9c]">{hint}</p>
@@ -187,7 +188,7 @@ export function AssetDrawer({ asset, shared, overrides, onClose, onSave }: { ass
   return (
     <div className="fixed inset-0 z-40" onMouseDown={e => e.target === e.currentTarget && onClose()}>
       <div className="absolute inset-0 bg-[#111315]/25 pointer-events-none" />
-      <aside data-tour="drawer" role="dialog" aria-label={`Asset configuration ${asset.name}`} className="slide-in absolute right-0 top-0 h-full w-[404px] bg-white flex flex-col shadow-[-12px_0_40px_rgba(17,19,21,.15)]">
+      <aside data-tour="drawer" role="dialog" aria-label={`Asset configuration ${asset.name}`} className="slide-in absolute right-0 top-0 h-full w-full max-w-[404px] bg-white flex flex-col shadow-[-12px_0_40px_rgba(17,19,21,.15)]">
         <div className="relative px-[22px] pt-[30px] pb-[20px] bg-[#f7f7f7] border-b border-[#e5e5e5]">
           <p className="text-[9px] font-semibold uppercase tracking-[0.3px] text-[#3e4345]">Asset configuration</p>
           <h2 className="mt-[6px] text-[18px] leading-[24px] font-medium">{asset.name}</h2>
@@ -282,9 +283,9 @@ export function ConfigureAssets({
         }
       />
 
-      <div data-tour="defaults" className="flex items-center gap-[18px] px-[16px] py-[14px] bg-[#f7f7f7] border border-[#e2e3e3]">
-        <div className="flex items-center gap-[10px] pr-[24px] border-r border-[#dcdcdc]">
-          <span className="grid place-items-center size-[30px] bg-brand"><SlidersHorizontal size={15} /></span>
+      <div data-tour="defaults" className="flex flex-wrap lg:flex-nowrap items-center gap-x-[18px] gap-y-[12px] px-[16px] py-[14px] bg-[#f7f7f7] border border-[#e2e3e3]">
+        <div className="flex items-center gap-[10px] pr-[24px] lg:border-r border-[#dcdcdc] basis-full lg:basis-auto">
+          <span className="section-icon grid place-items-center size-[30px] bg-brand"><PixelIcon name="sliders" size={18} /></span>
           <span className="text-[10px] font-bold">Exercise defaults</span>
         </div>
         {[
@@ -293,7 +294,7 @@ export function ConfigureAssets({
           ['Date', `${formatDate(draft.startDate)} - ${formatDate(draft.endDate)}`],
           ['Testing window', windowText(shared.window)],
         ].map(([k, v], i) => (
-          <div key={k} className={cx('flex-1 min-w-0 pr-[14px]', i < 3 && 'border-r border-[#dcdcdc]')}>
+          <div key={k} className={cx('flex-1 min-w-[120px] pr-[14px]', i < 3 && 'lg:border-r border-[#dcdcdc]')}>
             <p className="text-[8px] uppercase tracking-[0.4px] text-[#73787a]">{k}</p>
             <p className="mt-[4px] text-[10px] font-semibold truncate">{v}</p>
           </div>
@@ -309,7 +310,8 @@ export function ConfigureAssets({
       />
 
       <div data-tour="config-table" className="bg-white border border-[#e5e5e5] rounded-[6px] overflow-hidden">
-        <table className="w-full border-collapse">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[720px] border-collapse">
           <thead>
             <tr>
               <Th className="w-[42px]"><span data-tour="select-all" className="inline-flex"><Checkbox checked={allOn} indeterminate={!allOn && someOn} onChange={() => setChecked(allOn ? [] : ids)} /></span></Th>
@@ -355,6 +357,7 @@ export function ConfigureAssets({
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </>
   )

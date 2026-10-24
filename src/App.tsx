@@ -4,7 +4,7 @@ import type { AssetOverrides, Exercise, ExerciseDraft, SharedConfig } from './da
 import { ASSETS, DEFAULT_DRAFT, DEFAULT_SHARED, INITIAL_EXERCISES, SEED_OVERRIDES, formatDate, hasOverrides } from './data'
 import { Header, Shell, Sidebar } from './components/Layout'
 import { Button, FormFooter, Stepper } from './components/ui'
-import { Assistant, GUIDES, TourOverlay, type GuideId, type Screen } from './components/Assistant'
+import { Assistant, AssistantLauncher, GUIDES, TourOverlay, type GuideId, type Screen } from './components/Assistant'
 import { ExercisesList } from './screens/ExercisesList'
 import { ExerciseDetails } from './screens/ExerciseDetails'
 import { SelectAssets } from './screens/SelectAssets'
@@ -211,9 +211,9 @@ export default function App() {
   const checkedAssets = ASSETS.filter(a => checked.includes(a.id))
 
   return (
-    <div className="flex min-h-screen min-w-[1100px] bg-[#fafafa]">
+    <div className="flex min-h-screen bg-[#fafafa]">
       <Sidebar onHome={() => { setReturnTo(null); go('list') }} />
-      <Shell header={<Header happy={happy} onSmiley={() => { setHappy(true); setChatOpen(true) }} />}>
+      <Shell header={<Header introKey={screen} happy={happy} onSmiley={() => { setHappy(true); setChatOpen(true) }} />}>
         {stepIndex >= 0 && <Stepper active={stepIndex} editing={!!returnTo} onGo={i => { setReturnTo(null); go(ORDER[i]) }} />}
 
         <div key={screen} className="fade-up flex flex-col gap-[18px]">
@@ -256,15 +256,16 @@ export default function App() {
             </div>
           )}
           {screen === 'created' && (
-            <div className="flex justify-end pt-[120px]">
+            <div className="flex justify-end pt-[48px] sm:pt-[120px]">
               <Button className="min-w-[108px] h-[40px] px-[15px]" onClick={() => go('list')} iconRight={<ArrowRight size={16} strokeWidth={1.75} />}>Continue</Button>
             </div>
           )}
         </div>
+        <AssistantLauncher open={chatOpen} onToggle={() => setChatOpen(!chatOpen)} />
       </Shell>
 
       {toast && (
-        <div role="status" className="fade-up fixed z-40 bottom-[100px] left-[170px] flex items-center gap-[10px] w-[344px] h-[37px] px-[12px] bg-[#e8f8ef] border border-[#c4ecd6] text-[11px] font-semibold">
+        <div role="status" className="fade-up fixed z-40 bottom-[72px] left-[12px] md:left-[112px] flex items-center gap-[10px] w-[min(344px,calc(100vw-24px))] min-h-[37px] py-[8px] px-[12px] bg-[#e8f8ef] border border-[#c4ecd6] text-[11px] font-semibold">
           <Check size={15} />
           <span className="flex-1">{toast}</span>
           <button onClick={() => setToast(null)} aria-label="Cerrar"><X size={15} /></button>

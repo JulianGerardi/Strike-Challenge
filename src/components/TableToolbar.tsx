@@ -74,9 +74,9 @@ export function TableToolbar<T>({ api, groups, placeholder, right }: { api: Filt
 
   return (
     <div className="w-full">
-      <div className="flex items-center gap-[22px] h-[33px]">
-        <div className="pr-[24px] border-r border-[#e7e7e7] h-full flex items-center">
-          <label data-tour="search" className="flex items-center gap-[6px] w-[243px] h-[33px] px-[13px] border border-[#e7e7e7] bg-white focus-within:border-[#2bb9bd]">
+      <div className="flex flex-wrap items-center gap-[12px] sm:gap-[22px] sm:h-[33px]">
+        <div className="flex-1 sm:flex-none sm:pr-[24px] sm:border-r border-[#e7e7e7] h-full flex items-center">
+          <label data-tour="search" className="flex items-center gap-[6px] w-full sm:w-[243px] h-[33px] px-[13px] border border-[#e7e7e7] bg-white focus-within:border-[#2bb9bd]">
             <Search size={15} className="text-ink shrink-0" />
             <input
               value={api.query}
@@ -93,7 +93,7 @@ export function TableToolbar<T>({ api, groups, placeholder, right }: { api: Filt
           <button
             data-tour="filter"
             onClick={() => setOpen(o => !o)}
-            className={cx('flex items-center gap-[7px] h-[33px] px-[14px] border bg-white font-fono text-[10px] uppercase tracking-[0.3px] text-brand-ink transition-colors', open || api.count ? 'border-[#2bb9bd]' : 'border-[#e7e7e7] hover:border-[#cfd1d2]')}
+            className={cx('flex items-center gap-[7px] h-[33px] px-[14px] border bg-white font-semibold text-[10px] uppercase tracking-[0.6px] text-brand-ink transition-colors', open || api.count ? 'border-[#2bb9bd]' : 'border-[#e7e7e7] hover:border-[#cfd1d2]')}
           >
             <ListFilter size={16} strokeWidth={1.75} />
             Filter

@@ -34,7 +34,8 @@ export function ExercisesList({ exercises, onCreate }: { exercises: Exercise[]; 
       />
       <TableToolbar api={api} groups={GROUPS} placeholder="Search exercises" />
       <div className="bg-white border border-[#e5e5e5] rounded-[6px] overflow-hidden">
-        <table className="w-full border-collapse">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[720px] border-collapse">
           <thead>
             <tr>
               <Th className="w-[36%]">Exercise</Th>
@@ -61,7 +62,8 @@ export function ExercisesList({ exercises, onCreate }: { exercises: Exercise[]; 
             ))}
           </tbody>
         </table>
-        <Pagination page={page} pageSize={PAGE_SIZE} total={api.filtered.length} onPage={setPage} noun="Exercise" />
+        </div>
+        <Pagination page={page} pageSize={PAGE_SIZE} total={api.filtered.length} onPage={setPage} noun="exercises" />
       </div>
     </>
   )

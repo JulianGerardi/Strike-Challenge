@@ -76,6 +76,19 @@ function findTarget(name: string): HTMLElement | null {
   return all.find(el => el.getClientRects().length > 0) ?? null
 }
 
+/** The target's box clipped to its scrolling ancestors, so wide table rows on small screens stay inside the view. */
+function visibleRect(el: Element) {
+  const r = el.getBoundingClientRect()
+  let left = r.left, right = r.right
+  for (let p = el.parentElement; p; p = p.parentElement) {
+    if (p.scrollWidth > p.clientWidth && getComputedStyle(p).overflowX !== 'visible') {
+      const pr = p.getBoundingClientRect()
+      left = Math.max(left, pr.left); right = Math.min(right, pr.right)
+    }
+  }
+  return new DOMRect(left, r.top, Math.max(0, right - left), r.height)
+}
+
 export function TourOverlay({ step, index, total, onNext, onPrev, onClose, onTargetClick }: { step: TourStep; index: number; total: number; onNext: () => void; onPrev: () => void; onClose: () => void; onTargetClick: () => void }) {
   const [rect, setRect] = useState<DOMRect | null>(null)
   const clickRef = useRef(onTargetClick)
@@ -113,7 +126,7 @@ export function TourOverlay({ step, index, total, onNext, onPrev, onClose, onTar
     let raf = 0
     const loop = () => {
       const el = findTarget(step.target)
-      const r = el?.getBoundingClientRect() ?? null
+      const r = el ? visibleRect(el) : null
       setRect(prev => (prev && r && prev.top === r.top && prev.left === r.left && prev.width === r.width && prev.height === r.height ? prev : r))
       raf = requestAnimationFrame(loop)
     }
@@ -311,18 +324,9 @@ export function Assistant({
 
   return (
     <>
-      <button
-        data-tour="assistant"
-        onClick={() => setOpen(!open)}
-        aria-label={open ? 'Cerrar asistente' : 'Abrir asistente'}
-        className="fixed z-50 bottom-0 left-[112px] grid place-items-center w-[44px] h-[48px] bg-brand shadow-[0_6px_18px_rgba(17,19,21,.18)] hover:bg-[#6edadd] transition-colors"
-      >
-        {open ? <X size={20} /> : <Bot size={20} strokeWidth={1.75} />}
-        {!open && !tour && <span className="absolute -top-[3px] -right-[3px] size-[9px] rounded-full bg-[#1fb5bb] border-2 border-white animate-pulse" />}
-      </button>
 
       {open && (
-        <div role="dialog" aria-label="Asistente de Strike" className="fade-up fixed z-50 bottom-[58px] left-[112px] w-[360px] h-[540px] max-h-[calc(100vh-80px)] flex flex-col bg-[#fafafa] shadow-[0_24px_64px_rgba(17,19,21,.28)] border border-[#e5e5e5]">
+        <div role="dialog" aria-label="Asistente de Strike" className="fade-up fixed z-50 bottom-[72px] left-[12px] md:left-[112px] w-[min(360px,calc(100vw-24px))] h-[540px] max-h-[calc(100dvh-140px)] flex flex-col bg-[#fafafa] shadow-[0_24px_64px_rgba(17,19,21,.28)] border border-[#e5e5e5]">
           <div className="flex items-center gap-[10px] px-[14px] h-[54px] bg-[#111315] text-white shrink-0">
             <span className="grid place-items-center size-[30px] bg-brand text-ink"><Bot size={17} /></span>
             <div className="flex-1">
@@ -379,5 +383,21 @@ export function Assistant({
         </div>
       )}
     </>
+  )
+}
+
+/** Launcher that sits in the page flow under the content, as in the design. */
+export function AssistantLauncher({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+  return (
+    <div className="self-start">
+      <button
+        data-tour="assistant"
+        onClick={onToggle}
+        aria-label={open ? 'Cerrar asistente' : 'Abrir asistente'}
+        className="grid place-items-center w-[44px] h-[48px] bg-brand hover:bg-[#6edadd] transition-colors"
+      >
+        {open ? <X size={20} /> : <Bot size={20} strokeWidth={1.75} />}
+      </button>
+    </div>
   )
 }
