@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { height: 100%; }
+body { margin: 0; background: #fafafa; color: #111315; font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+
+/* ---------- Smiley ---------- */
+@keyframes smile-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+@keyframes smile-hello { 0% { transform: rotate(0) scale(.6); opacity: 0; } 40% { transform: rotate(-14deg) scale(1.1); opacity: 1; } 60% { transform: rotate(10deg); } 80% { transform: rotate(-5deg); } 100% { transform: rotate(0) scale(1); } }
+@keyframes smile-jump { 0%, 100% { transform: translateY(0); } 30% { transform: translateY(-5px) rotate(-8deg); } 55% { transform: translateY(0) rotate(6deg); } 75% { transform: translateY(-2px); } }
+@keyframes smile-glow { 0% { box-shadow: 0 0 0 0 rgba(124,229,232,.7); } 100% { box-shadow: 0 0 0 10px rgba(124,229,232,0); } }
+.smiley-face { animation: smile-hello .9s cubic-bezier(.3,1.4,.5,1) both; transform-origin: 50% 50%; }
+.smiley-eye { transform-box: fill-box; transform-origin: center; animation: smile-blink 4.2s infinite; }
+.smiley-mouth { transition: opacity .2s ease; }
+.smiley-mouth-big { opacity: 0; }
+.smiley:hover .smiley-face, .smiley.is-happy .smiley-face { animation: smile-jump .7s ease; }
+.smiley:hover .smiley-mouth-small, .smiley.is-happy .smiley-mouth-small { opacity: 0; }
+.smiley:hover .smiley-mouth-big, .smiley.is-happy .smiley-mouth-big { opacity: 1; }
+.smiley:hover .smiley-eye-r { animation: none; transform: scaleY(.15); }
+.smiley.is-happy { animation: smile-glow 1s ease-out 2; }
+.smiley-cheek { opacity: 0; transition: opacity .2s; }
+.smiley:hover .smiley-cheek, .smiley.is-happy .smiley-cheek { opacity: .55; }
+
+/* ---------- Tour ---------- */
+@keyframes tour-pulse { 0% { box-shadow: 0 0 0 9999px rgba(10,12,14,.55), 0 0 0 0 rgba(124,229,232,.9); } 70% { box-shadow: 0 0 0 9999px rgba(10,12,14,.55), 0 0 0 12px rgba(124,229,232,0); } 100% { box-shadow: 0 0 0 9999px rgba(10,12,14,.55), 0 0 0 0 rgba(124,229,232,0); } }
+.tour-ring { animation: tour-pulse 1.8s ease-out infinite; transition: top .35s ease, left .35s ease, width .35s ease, height .35s ease; }
+.tour-card { transition: top .35s ease, left .35s ease; }
+
+/* ---------- Misc ---------- */
+@keyframes fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.fade-up { animation: fade-up .25s ease both; }
+@keyframes slide-in { from { transform: translateX(100%); } to { transform: none; } }
+.slide-in { animation: slide-in .3s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes row-new { 0% { background: #b6f6f8; } 100% { background: transparent; } }
+.row-new { animation: row-new 2.4s ease-out 1; }
+@keyframes typing { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+.typing span { animation: typing 1.2s infinite; }
+.typing span:nth-child(2) { animation-delay: .15s; }
+.typing span:nth-child(3) { animation-delay: .3s; }

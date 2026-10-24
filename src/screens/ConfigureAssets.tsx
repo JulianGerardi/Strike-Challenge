@@ -1,0 +1,361 @@
+import { useEffect, useMemo, useState } from 'react'
+import { Check, Clock, Pencil, SlidersHorizontal, TriangleAlert, X } from 'lucide-react'
+import type { Asset, AssetOverrides, ExerciseDraft, SharedConfig, TimeWindow } from '../data'
+import { ASSETS, EXCLUDABLE_TESTS, RATE_LIMITS, effective, excludedLabel, formatDate, hasOverrides } from '../data'
+import { AssetMark, Badge, Button, Checkbox, FieldLabel, PageHeader, Segmented, Select, Td, Th, cx, inputClass } from '../components/ui'
+import { TableToolbar, useTableFilters, type FilterGroup } from '../components/TableToolbar'
+
+type FieldKey = keyof AssetOverrides
+const FIELD_LABEL: Record<FieldKey, string> = {
+  rateLimit: 'Rate limit',
+  vpnRequired: 'VPN requirement',
+  excludedTests: 'Excluded test types',
+  window: 'Allowed testing window',
+}
+
+type Mode = 'Keep current' | 'Apply new' | 'Reset'
+export interface BulkChange { mode: Mode; rateLimit: number; vpnRequired: boolean; excludedTests: string[]; window: TimeWindow }
+export type BulkChanges = Record<FieldKey, BulkChange>
+
+const vpnText = (v: boolean) => (v ? 'Required' : 'Not required')
+const windowText = (w: TimeWindow) => `${w.start}–${w.end}`
+
+/* ------------------------------------------------------------------ */
+
+function TimeInput({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) {
+  return (
+    <div className="flex-1">
+      <FieldLabel>{label}</FieldLabel>
+      <label className={cx(inputClass(!!value), 'relative flex items-center gap-[8px] h-[38px] px-[9px]')}>
+        <Clock size={16} />
+        <input type="time" value={value} onChange={e => onChange(e.target.value)} className="flex-1 bg-transparent outline-none text-[11px]" />
+      </label>
+    </div>
+  )
+}
+
+function ExcludedPicker({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  return (
+    <div className="flex flex-col gap-[11px] border border-[#cfd1d2] p-[12px]">
+      {EXCLUDABLE_TESTS.map(t => (
+        <Checkbox key={t} checked={value.includes(t)} onChange={on => onChange(on ? [...value, t] : value.filter(x => x !== t))} label={t} />
+      ))}
+    </div>
+  )
+}
+
+function FieldEditor({ field, value, onChange }: { field: FieldKey; value: BulkChange; onChange: (v: BulkChange) => void }) {
+  if (field === 'rateLimit')
+    return (
+      <div>
+        <FieldLabel>Requests per second</FieldLabel>
+        <Select value={value.rateLimit} options={RATE_LIMITS} onChange={v => onChange({ ...value, rateLimit: v })} />
+      </div>
+    )
+  if (field === 'vpnRequired')
+    return <Segmented full value={vpnText(value.vpnRequired)} options={['Required', 'Not required'] as const} onChange={v => onChange({ ...value, vpnRequired: v === 'Required' })} />
+  if (field === 'excludedTests') return <ExcludedPicker value={value.excludedTests} onChange={v => onChange({ ...value, excludedTests: v })} />
+  return (
+    <div className="flex gap-[14px]">
+      <TimeInput label="Start time" value={value.window.start} onChange={v => onChange({ ...value, window: { ...value.window, start: v } })} />
+      <TimeInput label="End time" value={value.window.end} onChange={v => onChange({ ...value, window: { ...value.window, end: v } })} />
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+
+function Modal({ title, caption, children, onClose, footer, tourId }: { title: string; caption: string; children: React.ReactNode; onClose: () => void; footer: React.ReactNode; tourId?: string }) {
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    document.addEventListener('keydown', k)
+    return () => document.removeEventListener('keydown', k)
+  }, [onClose])
+  return (
+    <div className="fixed inset-0 z-40 bg-[#111315]/40 grid place-items-center p-[24px]" onMouseDown={e => e.target === e.currentTarget && onClose()}>
+      <div data-tour={tourId} role="dialog" aria-modal="true" aria-label={title} className="fade-up w-[620px] max-w-full max-h-[calc(100vh-48px)] flex flex-col bg-white shadow-[0_24px_64px_rgba(17,19,21,.25)]">
+        <div className="relative px-[24px] pt-[24px] pb-[20px] bg-[#f7f7f7] border-b border-[#e5e5e5]">
+          <h2 className="text-[18px] leading-[24px] font-medium">{title}</h2>
+          <p className="mt-[6px] text-[11px] text-[#666b6e]">{caption}</p>
+          <button onClick={onClose} aria-label="Close" className="absolute right-[22px] top-[24px] text-[#505557] hover:text-ink"><X size={18} /></button>
+        </div>
+        <div className="overflow-auto px-[24px] py-[18px]">{children}</div>
+        <div className="flex justify-end gap-[8px] px-[18px] py-[12px] bg-[#f3f3f2]">{footer}</div>
+      </div>
+    </div>
+  )
+}
+
+export function BulkEditModal({ count, shared, changes, setChanges, onClose, onSave }: { count: number; shared: SharedConfig; changes: BulkChanges; setChanges: (c: BulkChanges) => void; onClose: () => void; onSave: () => void }) {
+  const dirty = Object.values(changes).some(c => c.mode !== 'Keep current')
+  return (
+    <Modal
+      tourId="bulk-modal"
+      title="Edit asset settings"
+      caption={`Choose only the settings you want to change for ${count} selected ${count === 1 ? 'asset' : 'assets'}.`}
+      onClose={onClose}
+      footer={<><Button variant="ghost" className="w-[108px] h-[40px]" onClick={onClose}>Cancel</Button><Button className="h-[40px] px-[16px]" disabled={!dirty} onClick={onSave}>Save changes</Button></>}
+    >
+      <div className="flex flex-col divide-y divide-[#efefef]">
+        {(Object.keys(FIELD_LABEL) as FieldKey[]).map(f => {
+          const c = changes[f]
+          const hint =
+            c.mode === 'Apply new' ? 'Replace this field for every selected asset.' : c.mode === 'Reset' ? `Return every selected asset to the exercise default (${f === 'rateLimit' ? `${shared.rateLimit} req/s` : f === 'vpnRequired' ? vpnText(shared.vpnRequired) : f === 'window' ? windowText(shared.window) : excludedLabel(shared.excludedTests)}).` : 'Leave each selected asset unchanged.'
+          return (
+            <div key={f} className="py-[14px] flex flex-col gap-[12px]">
+              <div className="flex items-start justify-between gap-[12px]">
+                <div>
+                  <p className="text-[12px] font-semibold">{FIELD_LABEL[f]}</p>
+                  <p className="mt-[6px] text-[9px] text-[#969a9c]">{hint}</p>
+                </div>
+                <Segmented size="sm" value={c.mode} options={['Keep current', 'Apply new', 'Reset'] as const} onChange={m => setChanges({ ...changes, [f]: { ...c, mode: m } })} />
+              </div>
+              {c.mode === 'Apply new' && <div className="fade-up"><FieldEditor field={f} value={c} onChange={v => setChanges({ ...changes, [f]: v })} /></div>}
+            </div>
+          )
+        })}
+      </div>
+    </Modal>
+  )
+}
+
+export function describeChanges(changes: BulkChanges, shared: SharedConfig) {
+  const out: string[] = []
+  const c = changes
+  if (c.rateLimit.mode === 'Apply new') out.push(`Rate limit: ${c.rateLimit.rateLimit} req/s`)
+  if (c.rateLimit.mode === 'Reset') out.push(`Rate limit: reset to default (${shared.rateLimit} req/s)`)
+  if (c.vpnRequired.mode === 'Apply new') out.push(`VPN: ${vpnText(c.vpnRequired.vpnRequired).toLowerCase()}`)
+  if (c.vpnRequired.mode === 'Reset') out.push(`VPN: reset to default (${vpnText(shared.vpnRequired).toLowerCase()})`)
+  if (c.excludedTests.mode === 'Apply new') out.push(`Excluded tests: ${excludedLabel(c.excludedTests.excludedTests)}`)
+  if (c.excludedTests.mode === 'Reset') out.push(`Excluded tests: reset to default (${excludedLabel(shared.excludedTests)})`)
+  if (c.window.mode === 'Apply new') out.push(`Testing window: ${windowText(c.window.window)}`)
+  if (c.window.mode === 'Reset') out.push(`Testing window: reset to default (${windowText(shared.window)})`)
+  return out
+}
+
+export function ConfirmBulkModal({ assets, lines, onClose, onSave }: { assets: Asset[]; lines: string[]; onClose: () => void; onSave: () => void }) {
+  const types = Array.from(new Set(assets.map(a => a.type)))
+  return (
+    <Modal
+      tourId="confirm-modal"
+      title="Confirm bulk changes"
+      caption={`Review the impact before updating ${assets.length} ${assets.length === 1 ? 'asset' : 'assets'}.`}
+      onClose={onClose}
+      footer={<><Button variant="ghost" className="w-[108px] h-[40px]" onClick={onClose}>Cancel</Button><Button className="h-[40px] px-[16px]" onClick={onSave}>Save changes</Button></>}
+    >
+      <div className="flex gap-[10px] px-[14px] py-[10px] bg-[#fff6e9] text-[11px] leading-[17px] text-[#8a4b0f]">
+        <TriangleAlert size={16} className="shrink-0 mt-[1px]" />
+        <p><b>This action updates {assets.length} {assets.length === 1 ? 'asset' : 'assets'}.</b> Existing custom values in the fields below will be replaced. Unchanged fields and credentials will not be affected.</p>
+      </div>
+      <p className="mt-[18px] mb-[10px] text-[11px] font-semibold">Fields to update</p>
+      <ul className="flex flex-col gap-[9px]">
+        {lines.map(l => <li key={l} className="flex items-center gap-[8px] text-[11px] text-[#3e4345]"><Check size={14} className="text-[#1f9d6b]" />{l}</li>)}
+      </ul>
+      <p className="mt-[18px] mb-[10px] text-[11px] font-semibold">Affected assets</p>
+      <div className="flex flex-col items-start gap-[8px]">
+        {types.map(t => <Badge key={t} tone="type">{t} · {assets.filter(a => a.type === t).length}</Badge>)}
+      </div>
+    </Modal>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+
+export function AssetDrawer({ asset, shared, overrides, onClose, onSave }: { asset: Asset; shared: SharedConfig; overrides: AssetOverrides; onClose: () => void; onSave: (o: AssetOverrides) => void }) {
+  const [local, setLocal] = useState<AssetOverrides>(overrides)
+  const eff = effective(shared, local)
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    document.addEventListener('keydown', k)
+    return () => document.removeEventListener('keydown', k)
+  }, [onClose])
+
+  const setCustom = (f: FieldKey, on: boolean) => {
+    const next = { ...local }
+    if (on) (next as Record<FieldKey, unknown>)[f] = eff[f]
+    else delete next[f]
+    setLocal(next)
+  }
+  const inheritText: Record<FieldKey, string> = {
+    rateLimit: `Inherit default (${shared.rateLimit} req/s)`,
+    vpnRequired: `Inherit default (${vpnText(shared.vpnRequired).toLowerCase()})`,
+    excludedTests: `Inherit default (${excludedLabel(shared.excludedTests).toLowerCase()})`,
+    window: `Inherit exercise (${windowText(shared.window)})`,
+  }
+  const asChange: BulkChange = { mode: 'Apply new', ...eff }
+
+  return (
+    <div className="fixed inset-0 z-40" onMouseDown={e => e.target === e.currentTarget && onClose()}>
+      <div className="absolute inset-0 bg-[#111315]/25 pointer-events-none" />
+      <aside data-tour="drawer" role="dialog" aria-label={`Asset configuration ${asset.name}`} className="slide-in absolute right-0 top-0 h-full w-[404px] bg-white flex flex-col shadow-[-12px_0_40px_rgba(17,19,21,.15)]">
+        <div className="relative px-[22px] pt-[30px] pb-[20px] bg-[#f7f7f7] border-b border-[#e5e5e5]">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.3px] text-[#3e4345]">Asset configuration</p>
+          <h2 className="mt-[6px] text-[18px] leading-[24px] font-medium">{asset.name}</h2>
+          <button onClick={onClose} aria-label="Close" className="absolute right-[22px] top-[30px] text-[#505557] hover:text-ink"><X size={18} /></button>
+        </div>
+        <div className="flex-1 overflow-auto px-[22px] py-[24px]">
+          <div className="flex items-center gap-[12px] px-[16px] py-[12px] bg-[#f6f7f7] border-l-[3px] border-brand">
+            <span className="grid place-items-center size-[40px] bg-brand text-[14px] font-bold text-[#3e4345]">{asset.name[0]}</span>
+            <div>
+              <p className="text-[11px] font-bold">{asset.name}</p>
+              <p className="mt-[3px] text-[10px] text-[#666b6e]">{asset.type} · {asset.environment}</p>
+              <p className="mt-[3px] font-code text-[9px] text-[#969a9c]">{asset.identifier}</p>
+            </div>
+          </div>
+          {(Object.keys(FIELD_LABEL) as FieldKey[]).map(f => {
+            const custom = local[f] !== undefined
+            return (
+              <div key={f} className="py-[20px] border-b border-[#e5e5e5] flex flex-col gap-[16px]">
+                <p className="text-[12px] font-semibold">{f === 'vpnRequired' ? 'VPN access' : FIELD_LABEL[f]}</p>
+                <div className="flex items-center gap-[20px] pl-[10px]">
+                  <Checkbox checked={!custom} onChange={() => setCustom(f, false)} label={inheritText[f]} />
+                  <Checkbox checked={custom} onChange={() => setCustom(f, true)} label="Set custom value" />
+                </div>
+                {custom && (
+                  <div className="fade-up">
+                    <FieldEditor field={f} value={asChange} onChange={v => setLocal({ ...local, [f]: v[f] })} />
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+        <div className="flex justify-end gap-[8px] px-[18px] py-[10px] bg-[#f3f3f2]">
+          <Button variant="ghost" className="w-[108px] h-[40px]" onClick={onClose}>Cancel</Button>
+          <Button className="h-[40px] px-[16px]" onClick={() => onSave(local)}>Save changes</Button>
+        </div>
+      </aside>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+
+type Row = Asset & { eff: SharedConfig; o: AssetOverrides }
+
+const GROUPS: FilterGroup<Row>[] = [
+  { key: 'type', label: 'Type', get: r => r.type, options: ['Web application', 'Mobile application', 'API'] },
+  { key: 'config', label: 'Configuration', get: r => (hasOverrides(r.o) ? 'Custom overrides' : 'Inherits defaults'), options: ['Inherits defaults', 'Custom overrides'] },
+  { key: 'vpn', label: 'VPN access', get: r => vpnText(r.eff.vpnRequired), options: ['Required', 'Not required'] },
+]
+const searchOf = (r: Row) => `${r.name} ${r.identifier}`
+
+function Val({ children, custom }: { children: React.ReactNode; custom: boolean }) {
+  return (
+    <div>
+      <p>{children}</p>
+      {custom && <p className="flex items-center gap-[4px] text-[8px] font-semibold text-[#17575a] mt-[1px]"><span className="size-[5px] rounded-full bg-[#2bb9bd]" />Custom override</p>}
+    </div>
+  )
+}
+
+export function ConfigureAssets({
+  draft, shared, selectedIds, overrides, checked, setChecked, onAddSetting, onEditAsset, onEditDefaults,
+}: {
+  draft: ExerciseDraft; shared: SharedConfig; selectedIds: string[]; overrides: Record<string, AssetOverrides>
+  checked: string[]; setChecked: (ids: string[]) => void; onAddSetting: () => void; onEditAsset: (id: string) => void; onEditDefaults: () => void
+}) {
+  const rows: Row[] = useMemo(
+    () => ASSETS.filter(a => selectedIds.includes(a.id)).map(a => ({ ...a, o: overrides[a.id] ?? {}, eff: effective(shared, overrides[a.id]) })),
+    [selectedIds, overrides, shared],
+  )
+  const api = useTableFilters(rows, GROUPS, searchOf)
+  const ids = api.filtered.map(r => r.id)
+  const allOn = ids.length > 0 && ids.every(id => checked.includes(id))
+  const someOn = ids.some(id => checked.includes(id))
+  const toggle = (id: string) => setChecked(checked.includes(id) ? checked.filter(c => c !== id) : [...checked, id])
+
+  return (
+    <>
+      <PageHeader
+        title="Configure assets"
+        caption="Review inherited settings, adjust individual assets, and resolve exceptions before testing."
+        action={
+          <div className="relative group">
+            <Button data-tour="add-setting" variant="outline" onClick={onAddSetting} disabled={checked.length === 0} icon={<SlidersHorizontal size={15} strokeWidth={1.75} />}>Add setting</Button>
+            {checked.length === 0 && (
+              <span className="pointer-events-none absolute right-0 top-[42px] z-10 w-[220px] px-[10px] py-[8px] bg-ink text-white text-[10px] leading-[14px] opacity-0 group-hover:opacity-100 transition-opacity">
+                Select one or more assets in the table to edit their settings together.
+              </span>
+            )}
+          </div>
+        }
+      />
+
+      <div data-tour="defaults" className="flex items-center gap-[18px] px-[16px] py-[14px] bg-[#f7f7f7] border border-[#e2e3e3]">
+        <div className="flex items-center gap-[10px] pr-[24px] border-r border-[#dcdcdc]">
+          <span className="grid place-items-center size-[30px] bg-brand"><SlidersHorizontal size={15} /></span>
+          <span className="text-[10px] font-bold">Exercise defaults</span>
+        </div>
+        {[
+          ['Test depth', draft.depth],
+          ['Include human verification', draft.humanValidation ? 'Yes' : 'No'],
+          ['Date', `${formatDate(draft.startDate)} - ${formatDate(draft.endDate)}`],
+          ['Testing window', windowText(shared.window)],
+        ].map(([k, v], i) => (
+          <div key={k} className={cx('flex-1 min-w-0 pr-[14px]', i < 3 && 'border-r border-[#dcdcdc]')}>
+            <p className="text-[8px] uppercase tracking-[0.4px] text-[#73787a]">{k}</p>
+            <p className="mt-[4px] text-[10px] font-semibold truncate">{v}</p>
+          </div>
+        ))}
+        <button onClick={onEditDefaults} aria-label="Edit exercise defaults" className="grid place-items-center size-[30px] hover:bg-black/5"><Pencil size={17} /></button>
+      </div>
+
+      <TableToolbar
+        api={api}
+        groups={GROUPS}
+        placeholder="Search assets"
+        right={checked.length > 0 && <span className="text-[11px] font-semibold text-[#17575a]">{checked.length} selected for bulk edit</span>}
+      />
+
+      <div data-tour="config-table" className="bg-white border border-[#e5e5e5] rounded-[6px] overflow-hidden">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr>
+              <Th className="w-[42px]"><Checkbox checked={allOn} indeterminate={!allOn && someOn} onChange={() => setChecked(allOn ? [] : ids)} /></Th>
+              <Th>Asset</Th>
+              <Th>Type</Th>
+              <Th>Rate limit</Th>
+              <Th>VPN access</Th>
+              <Th>Excluded tests</Th>
+              <Th>Time start</Th>
+              <Th>Time end</Th>
+              <Th className="w-[50px]" />
+            </tr>
+          </thead>
+          <tbody>
+            {api.filtered.map(r => {
+              const on = checked.includes(r.id)
+              return (
+                <tr key={r.id} className={cx('h-[54px] transition-colors', on ? 'bg-[#eefcfc]' : 'hover:bg-[#fafafa]')}>
+                  <Td><Checkbox checked={on} onChange={() => toggle(r.id)} /></Td>
+                  <Td>
+                    <div className="flex items-center gap-[9px]">
+                      <AssetMark name={r.name} />
+                      <div>
+                        <p className="font-bold text-ink">{r.name}</p>
+                        <p className="text-[9px] leading-[14px] text-[#969a9c]">{r.identifier}</p>
+                      </div>
+                    </div>
+                  </Td>
+                  <Td><Badge tone="type">{r.type}</Badge></Td>
+                  <Td><Val custom={r.o.rateLimit !== undefined}>{r.eff.rateLimit} req/s</Val></Td>
+                  <Td><Val custom={r.o.vpnRequired !== undefined}>{vpnText(r.eff.vpnRequired)}</Val></Td>
+                  <Td><Val custom={r.o.excludedTests !== undefined}>{excludedLabel(r.eff.excludedTests)}</Val></Td>
+                  <Td><Val custom={r.o.window !== undefined}>{r.eff.window.start} hs</Val></Td>
+                  <Td><Val custom={r.o.window !== undefined}>{r.eff.window.end} hs</Val></Td>
+                  <Td>
+                    <button data-tour="edit-asset" onClick={() => onEditAsset(r.id)} aria-label={`Edit ${r.name}`} className="grid place-items-center size-[30px] hover:bg-black/5"><Pencil size={17} /></button>
+                  </Td>
+                </tr>
+              )
+            })}
+            {api.filtered.length === 0 && (
+              <tr><td colSpan={9} className="py-[28px] text-center text-[11px] text-[#969a9c]">No assets match your filters.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </>
+  )
+}
