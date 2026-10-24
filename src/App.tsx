@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, Check, X } from 'lucide-react'
+import { ArrowRight, Check, Trash2, X } from 'lucide-react'
 import type { AssetOverrides, Exercise, ExerciseDraft, SharedConfig } from './data'
 import { ASSETS, DEFAULT_DRAFT, DEFAULT_SHARED, INITIAL_EXERCISES, SEED_OVERRIDES, hasOverrides } from './data'
 import { Header, Shell, Sidebar } from './components/Layout'
 import { Button, FormFooter, Stepper } from './components/ui'
-import { Assistant, AssistantLauncher, TourOverlay, guides, type GuideId, type Screen } from './components/Assistant'
+import { Assistant, AssistantLauncher, TourOverlay, guides, loadDock, saveDock, type BotDock, type GuideId, type Screen } from './components/Assistant'
 import { ExercisesList } from './screens/ExercisesList'
 import { ExerciseDetails } from './screens/ExerciseDetails'
 import { SelectAssets } from './screens/SelectAssets'
-import { AssetDrawer, BulkEditModal, ConfigureAssets, ConfirmBulkModal, describeChanges, type BulkChanges } from './screens/ConfigureAssets'
+import { AssetDrawer, BulkEditModal, ConfigureAssets, ConfirmBulkModal, Modal, describeChanges, type BulkChanges } from './screens/ConfigureAssets'
 import { Review } from './screens/Review'
 import { ExerciseCreated } from './screens/ExerciseCreated'
 import { getLang, setCurrentLang, t, type Lang } from './i18n'
@@ -46,6 +46,14 @@ export default function App() {
   // Set when a step is opened to edit something from a later screen; saving returns there.
   const [returnTo, setReturnTo] = useState<Screen | null>(null)
   const nextId = useRef(2048)
+  const [discarding, setDiscarding] = useState(false)
+  const [dock, setDockState] = useState<BotDock>(loadDock)
+  const setDock = (d: BotDock) => {
+    saveDock(d)
+    setDockState(d)
+  }
+  // True when the tour itself took the user from the list into the flow: closing it should take them back.
+  const tourFromHome = useRef(false)
 
   const shared: SharedConfig = useMemo(
     () => ({ ...DEFAULT_SHARED, window: { start: draft.startTime || DEFAULT_SHARED.window.start, end: draft.endTime || DEFAULT_SHARED.window.end } }),
@@ -80,11 +88,12 @@ export default function App() {
       setBulk(null)
       setConfirming(false)
       setDrawer(null)
+      if (!tour) tourFromHome.current = screen === 'list' || screen === 'created'
       setTour({ guide, index })
       const s = guides()[guide].steps[index].screen
       if (s !== screen) go(s)
     },
-    [go, screen],
+    [go, screen, tour],
   )
 
   const moveTour = useCallback(
@@ -149,7 +158,7 @@ export default function App() {
 
   const onContinue = () => {
     if (screen === 'details') {
-      if (!draft.name.trim() || (draft.startDate && draft.endDate && draft.endDate < draft.startDate)) return setShowErrors(true)
+      if (!draft.name.trim() || !draft.startDate || !draft.endDate || draft.endDate < draft.startDate) return setShowErrors(true)
       return finish('assets')
     }
     if (screen === 'assets') {
@@ -179,6 +188,26 @@ export default function App() {
     }
     if (screen === 'details') return go('list')
     go(ORDER[stepIndex - 1])
+  }
+
+  // Drop everything set up for the exercise in progress and go back to the list.
+  const discardExercise = () => {
+    setDraft(DEFAULT_DRAFT)
+    setSelected([])
+    setOverrides(SEED_OVERRIDES)
+    setChecked([])
+    setReturnTo(null)
+    setBulk(null)
+    setConfirming(false)
+    setDrawer(null)
+    setDiscarding(false)
+    go('list')
+  }
+
+  const closeTour = () => {
+    setTour(null)
+    if (tourFromHome.current && screen !== 'list' && screen !== 'created') discardExercise()
+    tourFromHome.current = false
   }
 
   const resetFlow = () => {
@@ -255,6 +284,14 @@ export default function App() {
             <div className="pt-[22px]">
               <FormFooter
                 tourId="continue"
+                extra={
+                  stepIndex > 0 && (
+                    <button data-tour="discard" onClick={() => setDiscarding(true)} className="inline-flex items-center gap-[6px] h-[40px] px-[4px] text-[10px] font-bold uppercase tracking-[0.3px] text-[#b23a3a] hover:text-[#8f2424]">
+                      <Trash2 size={14} strokeWidth={1.9} />
+                      {t('Cancel exercise', 'Cancelar ejercicio')}
+                    </button>
+                  )
+                }
                 onCancel={onBack}
                 cancelLabel={returnTo || screen === 'details' ? t('Cancel', 'Cancelar') : t('Back', 'Atrás')}
                 onContinue={onContinue}
@@ -269,7 +306,7 @@ export default function App() {
           )}
         </div>
       </Shell>
-      <AssistantLauncher open={chatOpen} hidden={!!tour} onToggle={() => setChatOpen(!chatOpen)} />
+      <AssistantLauncher open={chatOpen} hidden={!!tour || !!bulk || !!drawer || discarding} dock={dock} setDock={setDock} onClose={() => setChatOpen(false)} onToggle={() => setChatOpen(!chatOpen)} />
 
       {toast && (
         <div role="status" className="fade-up fixed z-40 bottom-[16px] left-[12px] md:left-[112px] flex items-center gap-[10px] w-[min(344px,calc(100vw-24px))] min-h-[37px] py-[8px] px-[12px] bg-[#e8f8ef] border border-[#c4ecd6] text-[11px] font-semibold">
@@ -300,7 +337,28 @@ export default function App() {
         />
       )}
 
-      <Assistant open={chatOpen} setOpen={setChatOpen} screen={screen} tour={tour} onStartTour={startTour} />
+      {discarding && (
+        <Modal
+          tourId="discard-modal"
+          title={t('Cancel this exercise?', '¿Cancelar este ejercicio?')}
+          caption={t('Everything you set up for this exercise will be discarded.', 'Se va a descartar todo lo que configuraste para este ejercicio.')}
+          onClose={() => setDiscarding(false)}
+          footer={
+            <>
+              <Button variant="ghost" className="h-[40px] px-[14px]" onClick={() => setDiscarding(false)}>{t('Keep editing', 'Seguir editando')}</Button>
+              <Button data-tour="discard-confirm" className="h-[40px] px-[16px] !bg-[#c23b3b] !border-[#a52f2f] !text-white hover:!bg-[#a52f2f]" onClick={() => { discardExercise(); setToast(t('Exercise discarded', 'Ejercicio descartado')) }}>
+                {t('Discard exercise', 'Descartar ejercicio')}
+              </Button>
+            </>
+          }
+        >
+          <p className="text-[11px] leading-[17px] text-[#3e4345]">
+            {t(`You will lose the details, the ${selected.length} selected ${selected.length === 1 ? 'asset' : 'assets'} and any custom settings. Nothing has been created yet.`, `Vas a perder los detalles, ${selected.length === 1 ? 'el asset seleccionado' : `los ${selected.length} assets seleccionados`} y la configuración personalizada. Todavía no se creó nada.`)}
+          </p>
+        </Modal>
+      )}
+
+      <Assistant open={chatOpen} setOpen={setChatOpen} side={dock.side} screen={screen} tour={tour} onStartTour={startTour} />
       {tour && (
         <TourOverlay
           step={guides()[tour.guide].steps[tour.index]}
@@ -308,7 +366,7 @@ export default function App() {
           total={guides()[tour.guide].steps.length}
           onNext={() => moveTour(1)}
           onPrev={() => moveTour(-1)}
-          onClose={() => setTour(null)}
+          onClose={closeTour}
           onTargetClick={() => advanceFrom(tour.index)}
         />
       )}

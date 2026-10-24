@@ -69,7 +69,7 @@ function FieldEditor({ field, value, onChange }: { field: FieldKey; value: BulkC
 
 /* ------------------------------------------------------------------ */
 
-function Modal({ title, caption, children, onClose, footer, tourId }: { title: string; caption: string; children: React.ReactNode; onClose: () => void; footer: React.ReactNode; tourId?: string }) {
+export function Modal({ title, caption, children, onClose, footer, tourId }: { title: string; caption: string; children: React.ReactNode; onClose: () => void; footer: React.ReactNode; tourId?: string }) {
   useEffect(() => {
     const k = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     document.addEventListener('keydown', k)

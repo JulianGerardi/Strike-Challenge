@@ -29,9 +29,10 @@ export function Button({ variant = 'primary', icon, iconRight, className, childr
   )
 }
 
-export function FormFooter({ onCancel, onContinue, continueLabel = t('Continue', 'Continuar'), cancelLabel = t('Cancel', 'Cancelar'), disabled, tourId }: { onCancel: () => void; onContinue: () => void; continueLabel?: string; cancelLabel?: string; disabled?: boolean; tourId?: string }) {
+export function FormFooter({ onCancel, onContinue, continueLabel = t('Continue', 'Continuar'), cancelLabel = t('Cancel', 'Cancelar'), disabled, tourId, extra }: { onCancel: () => void; onContinue: () => void; continueLabel?: string; cancelLabel?: string; disabled?: boolean; tourId?: string; extra?: ReactNode }) {
   return (
-    <div className="flex justify-end items-center">
+    <div className="flex flex-wrap justify-end items-center gap-y-[8px]">
+      {extra && <div className="mr-auto">{extra}</div>}
       <Button variant="ghost" className="w-[108px] h-[40px]" onClick={onCancel}>{cancelLabel}</Button>
       <Button data-tour={tourId} className="min-w-[108px] h-[40px] px-[15px]" onClick={onContinue} disabled={disabled} iconRight={<ArrowRight size={16} strokeWidth={1.75} />}>
         {continueLabel}
@@ -179,7 +180,7 @@ export function Select<T extends string | number>({ value, options, onChange, pl
           const opt = options.find(o => String(o) === raw)
           if (opt !== undefined) onChange(opt)
         }}
-        className={cx(inputClass(), 'appearance-none h-[38px] px-[10px] pr-[30px]')}
+        className={cx(inputClass(), 'appearance-none h-[38px] px-[10px] pr-[30px]', value === '' && '!text-[#9a9fa1]')}
       >
         {placeholder && <option value="" disabled>{placeholder}</option>}
         {options.map(o => (

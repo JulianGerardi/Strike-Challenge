@@ -109,19 +109,19 @@ export const SEED_OVERRIDES: Record<string, AssetOverrides> = {
   a4: { rateLimit: 20, excludedTests: ['Destructive testing'] },
 }
 
+/** A new exercise starts empty; only the recommended depth is preselected. */
 export const DEFAULT_DRAFT: ExerciseDraft = {
-  name: 'Q4 Commerce Security Assessment',
-  objective:
-    'Assess the security posture of the commerce ecosystem, focusing on authentication, authorization, API exposure, and critical customer journeys.',
+  name: '',
+  objective: '',
   depth: 'Standard',
-  startDate: '2025-11-03',
-  endDate: '2025-11-14',
-  recurrence: 'Does not repeat',
-  startTime: '09:00',
-  endTime: '18:00',
-  timeZone: 'UTC-5:00 East Time',
+  startDate: '',
+  endDate: '',
+  recurrence: '',
+  startTime: '',
+  endTime: '',
+  timeZone: '',
   humanValidation: false,
-  validationNotes: 'Prioritize validation of authentication and authorization findings.',
+  validationNotes: '',
 }
 
 export function effective(shared: SharedConfig, o: AssetOverrides | undefined): SharedConfig {

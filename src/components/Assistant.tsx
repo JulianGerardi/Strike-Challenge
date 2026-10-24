@@ -303,9 +303,9 @@ function GuideCard({ guide, screen, tourIndex, onStart, onJump }: { guide: Guide
 }
 
 export function Assistant({
-  open, setOpen, screen, tour, onStartTour,
+  open, setOpen, screen, tour, onStartTour, side = 'right',
 }: {
-  open: boolean; setOpen: (v: boolean) => void; screen: Screen
+  open: boolean; setOpen: (v: boolean) => void; screen: Screen; side?: 'left' | 'right'
   tour: { guide: GuideId; index: number } | null
   onStartTour: (guide: GuideId, index: number) => void
 }) {
@@ -382,7 +382,7 @@ export function Assistant({
     <>
 
       {open && (
-        <div className="fixed z-50 inset-x-[12px] bottom-[12px] sm:inset-x-auto sm:bottom-auto sm:right-[84px] sm:top-1/2 sm:-translate-y-1/2">
+        <div className={cx('fixed z-50 inset-x-[12px] bottom-[12px] sm:inset-x-auto sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2', side === 'right' ? 'sm:right-[84px]' : 'sm:left-[84px] md:left-[160px]')}>
         <div role="dialog" aria-label={t('Strike assistant', 'Asistente de Strike')} className="chat-pop w-full sm:w-[360px] h-[540px] max-h-[calc(100dvh-96px)] sm:max-h-[calc(100dvh-32px)] flex flex-col bg-[#fafafa] shadow-[0_24px_64px_rgba(17,19,21,.28)] border border-[#e5e5e5] rounded-[14px] overflow-hidden">
           <div className="flex items-center gap-[10px] px-[14px] h-[54px] bg-[#111315] text-white shrink-0">
             <span className="grid place-items-center size-[30px] bg-brand text-ink"><Bot size={17} /></span>
@@ -460,54 +460,173 @@ function BotFace() {
 }
 
 const INTERACTIVE = 'button, a, input, select, textarea, label, [role="checkbox"], [role="switch"], [role="radio"]'
+const SIZE = 52
+
+/** Where the launcher lives: which edge, how far down (0–1 of the viewport), and whether it is tucked away. */
+export interface BotDock { side: 'left' | 'right'; y: number; tucked: boolean }
+const DOCK_KEY = 'strike-bot-dock'
+
+export function loadDock(): BotDock {
+  try {
+    const d = JSON.parse(localStorage.getItem(DOCK_KEY) ?? 'null')
+    if (d && (d.side === 'left' || d.side === 'right') && typeof d.y === 'number') return { side: d.side, y: d.y, tucked: !!d.tucked }
+  } catch { /* storage unavailable */ }
+  return { side: 'right', y: 0.5, tucked: false }
+}
+
+export function saveDock(d: BotDock) {
+  try { localStorage.setItem(DOCK_KEY, JSON.stringify(d)) } catch { /* storage unavailable */ }
+}
+
+// Left edge of the usable area: the sidebar is only there on wide screens.
+const leftInset = () => (document.querySelector('aside')?.getBoundingClientRect().right ?? 0) + 16
+
+/** Is there readable text right under (x, y)? Uses the caret API so blank space inside a cell doesn't count. */
+function textAt(x: number, y: number) {
+  const doc = document as Document & { caretPositionFromPoint?: (x: number, y: number) => { offsetNode: Node; offset: number } | null }
+  let node: Node | null = null
+  let offset = 0
+  if (doc.caretRangeFromPoint) {
+    const r = doc.caretRangeFromPoint(x, y)
+    if (r) { node = r.startContainer; offset = r.startOffset }
+  } else if (doc.caretPositionFromPoint) {
+    const p = doc.caretPositionFromPoint(x, y)
+    if (p) { node = p.offsetNode; offset = p.offset }
+  }
+  if (!node || node.nodeType !== Node.TEXT_NODE || !node.textContent?.trim()) return false
+  const len = node.textContent.length
+  for (const o of [offset - 1, offset]) {
+    if (o < 0 || o >= len) continue
+    const range = document.createRange()
+    range.setStart(node, o)
+    range.setEnd(node, o + 1)
+    const b = range.getBoundingClientRect()
+    if (x >= b.left - 2 && x <= b.right + 2 && y >= b.top - 2 && y <= b.bottom + 2) return true
+  }
+  return false
+}
 
 /**
- * Floating launcher, docked on the right at mid-height. When a control of the page (Continue,
- * a row's edit pencil…) passes underneath it, it slides to the nearest free spot so it never
- * covers an action. It steps aside entirely while a guided tour is running.
+ * Floating launcher. It starts on the right at mid-height, can be dragged to either edge
+ * (it snaps to the nearest one and remembers the spot) and tucked into a small tab.
+ * Wherever it sits, it slides to the nearest free spot when text or a control of the page is
+ * underneath, so it never covers information or an action. It steps aside during a tour.
  */
-export function AssistantLauncher({ open, onToggle, hidden }: { open: boolean; onToggle: () => void; hidden?: boolean }) {
+export function AssistantLauncher({ open, onToggle, onClose, hidden, dock, setDock }: { open: boolean; onToggle: () => void; onClose: () => void; hidden?: boolean; dock: BotDock; setDock: (d: BotDock) => void }) {
   const [shift, setShift] = useState(0)
+  const [drag, setDrag] = useState<{ x: number; y: number } | null>(null)
   const ref = useRef<HTMLDivElement>(null)
+  const press = useRef<{ x: number; y: number; moved: boolean } | null>(null)
+
   useEffect(() => {
+    if (dock.tucked || drag) return
     let raf = 0
-    const size = 52
     const blocked = (offset: number) => {
-      const cx = window.innerWidth - 16 - size / 2
-      const cy = window.innerHeight / 2 + offset
-      const pts: [number, number][] = [[cx, cy], [cx - 20, cy - 20], [cx + 20, cy - 20], [cx - 20, cy + 20], [cx + 20, cy + 20], [cx - 30, cy], [cx, cy - 30], [cx, cy + 30], [cx - 30, cy - 14], [cx - 30, cy + 14]]
-      return pts.some(([x, y]) =>
-        document.elementsFromPoint(x, y).some(el => !ref.current?.contains(el) && !!el.closest(INTERACTIVE) && !el.closest('[role="dialog"]')),
-      )
+      const cx = dock.side === 'right' ? window.innerWidth - 16 - SIZE / 2 : leftInset() + SIZE / 2
+      const cy = window.innerHeight * dock.y + offset
+      if (cy - SIZE / 2 < 56 || cy + SIZE / 2 > window.innerHeight - 8) return true
+      for (let dx = -24; dx <= 24; dx += 12) {
+        for (let dy = -24; dy <= 24; dy += 12) {
+          if (dx * dx + dy * dy > 27 * 27) continue
+          const x = cx + dx, y = cy + dy
+          if (textAt(x, y)) return true
+          if (document.elementsFromPoint(x, y).some(el => !!el.closest(INTERACTIVE) && !el.closest('[role="dialog"]'))) return true
+        }
+      }
+      return false
     }
     const check = () => {
       raf = 0
-      const limit = window.innerHeight / 2 - size
-      for (let step = 0; step * 30 <= limit; step++) {
-        for (const off of step ? [-step * 30, step * 30] : [0]) {
-          if (!blocked(off)) { setShift(off); return }
+      const el = ref.current
+      if (!el) return
+      el.style.pointerEvents = 'none' // look at what is underneath, not at the launcher itself
+      try {
+        for (let step = 0; step * 24 <= window.innerHeight; step++) {
+          for (const off of step ? [-step * 24, step * 24] : [0]) {
+            if (!blocked(off)) { setShift(off); return }
+          }
         }
+      } finally {
+        el.style.pointerEvents = ''
       }
     }
     const queue = () => { if (!raf) raf = requestAnimationFrame(check) }
     queue()
     window.addEventListener('scroll', queue, { passive: true })
     window.addEventListener('resize', queue)
-    const iv = window.setInterval(queue, 400)
+    const iv = window.setInterval(queue, 500)
     return () => { window.removeEventListener('scroll', queue); window.removeEventListener('resize', queue); window.clearInterval(iv); cancelAnimationFrame(raf) }
-  }, [])
+  }, [dock, drag])
 
-  return (
-    <div ref={ref} className={cx('fixed z-50 right-[16px] top-1/2 transition-[transform,opacity] duration-300 ease-out', hidden && 'opacity-0 pointer-events-none')} style={{ transform: `translateY(calc(-50% + ${shift}px))${hidden ? ' scale(.6)' : ''}` }}>
+  if (dock.tucked) {
+    return (
       <button
         data-tour="assistant"
-        onClick={onToggle}
+        onClick={() => setDock({ ...dock, tucked: false })}
+        aria-label={t('Show assistant', 'Mostrar asistente')}
+        title={t('Show assistant', 'Mostrar asistente')}
+        className={cx('fade-up fixed z-50 grid place-items-center w-[22px] h-[56px] bg-brand shadow-[0_6px_18px_rgba(17,19,21,.18)] hover:w-[28px] transition-[width]', dock.side === 'right' ? 'right-0 rounded-l-[12px]' : 'left-0 rounded-r-[12px]')}
+        style={{ top: `calc(${dock.y * 100}% - 28px)` }}
+      >
+        <Bot size={14} />
+      </button>
+    )
+  }
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    press.current = { x: e.clientX, y: e.clientY, moved: false }
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  }
+  const onPointerMove = (e: React.PointerEvent) => {
+    const p = press.current
+    if (!p) return
+    if (!p.moved && Math.hypot(e.clientX - p.x, e.clientY - p.y) < 6) return
+    p.moved = true
+    setDrag({ x: e.clientX, y: e.clientY })
+  }
+  const onPointerUp = (e: React.PointerEvent) => {
+    const p = press.current
+    if (p?.moved) {
+      const y = Math.min(0.9, Math.max(0.12, e.clientY / window.innerHeight))
+      setShift(0)
+      setDock({ ...dock, side: e.clientX < window.innerWidth / 2 ? 'left' : 'right', y })
+    }
+    setDrag(null)
+  }
+
+  const docked = { top: `${dock.y * 100}%`, transform: `translateY(calc(-50% + ${shift}px))${hidden ? ' scale(.6)' : ''}`, ...(dock.side === 'right' ? { right: 16 } : { left: leftInset() }) }
+  const dragging = drag ? { left: drag.x - SIZE / 2, top: drag.y - SIZE / 2 } : null
+
+  return (
+    <div
+      ref={ref}
+      className={cx('group fixed z-50', !drag && 'transition-[transform,opacity,top] duration-300 ease-out', hidden && 'opacity-0 pointer-events-none')}
+      style={dragging ?? docked}
+    >
+      <button
+        data-tour="assistant"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={() => { press.current = null; setDrag(null) }}
+        onClick={() => { if (!press.current?.moved) onToggle(); press.current = null }}
         aria-label={open ? t('Close assistant', 'Cerrar asistente') : t('Open assistant', 'Abrir asistente')}
-        className={cx('bot-launcher relative grid place-items-center size-[52px] rounded-full bg-brand shadow-[0_10px_28px_rgba(17,19,21,.22)] transition-colors hover:bg-[#6edadd]', !open && 'is-floating')}
+        title={t('Drag to move', 'Arrastrá para moverlo')}
+        className={cx('bot-launcher relative grid place-items-center size-[52px] rounded-full bg-brand shadow-[0_10px_28px_rgba(17,19,21,.22)] transition-colors hover:bg-[#6edadd] touch-none', drag ? 'cursor-grabbing scale-110' : 'cursor-grab', !open && !drag && 'is-floating')}
       >
         <span className="bot-ping absolute inset-0 rounded-full" />
         <span key={open ? 'x' : 'bot'} className="bot-swap grid place-items-center">{open ? <X size={22} /> : <BotFace />}</span>
       </button>
+      {!drag && (
+        <button
+          onClick={() => { onClose(); setDock({ ...dock, tucked: true }) }}
+          aria-label={t('Hide assistant', 'Ocultar asistente')}
+          title={t('Hide assistant', 'Ocultar asistente')}
+          className={cx('absolute -top-[4px] grid place-items-center size-[20px] rounded-full bg-ink text-white opacity-0 group-hover:opacity-100 focus:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity', dock.side === 'right' ? '-left-[4px]' : '-right-[4px]')}
+        >
+          <X size={11} strokeWidth={2.5} />
+        </button>
+      )}
     </div>
   )
 }
