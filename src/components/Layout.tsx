@@ -94,7 +94,7 @@ export function Header({ happy, onSmiley, introKey }: { happy?: boolean; onSmile
       <div className="flex items-center gap-[8px] md:gap-[5px]">
         <span className="md:hidden grid place-items-center size-[32px] bg-[#111315]"><StrikeLogo size={16} /></span>
         <Smiley happy={happy} intro={intro} onClick={onSmiley} />
-        <span key={String(introKey)} className="greet font-fono text-[14px] leading-[20px] text-[#09090b] whitespace-nowrap">Hola! Sarah</span>
+        <span key={String(introKey)} className="greet font-fono font-medium text-[14px] leading-[20px] text-[#09090b] whitespace-nowrap">Hola! Sarah</span>
       </div>
       <button className="flex items-center gap-[8px] h-[36px]">
         <span className="grid place-items-center size-[24px] bg-brand text-[9px] font-bold text-[#142f31]">JA</span>

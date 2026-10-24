@@ -5,7 +5,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        fono: ['"Space Mono"', 'ui-monospace', 'monospace'],
+        fono: ['"Aeonik Fono"', 'Inter', 'ui-sans-serif', 'sans-serif'],
         code: ['Menlo', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       colors: {

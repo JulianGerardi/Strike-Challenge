@@ -93,7 +93,7 @@ export function TableToolbar<T>({ api, groups, placeholder, right }: { api: Filt
           <button
             data-tour="filter"
             onClick={() => setOpen(o => !o)}
-            className={cx('flex items-center gap-[7px] h-[33px] px-[14px] border bg-white font-semibold text-[10px] uppercase tracking-[0.6px] text-brand-ink transition-colors', open || api.count ? 'border-[#2bb9bd]' : 'border-[#e7e7e7] hover:border-[#cfd1d2]')}
+            className={cx('flex items-center gap-[7px] h-[33px] px-[14px] border bg-white font-fono font-medium text-[10px] leading-[10px] uppercase tracking-[0.3px] text-brand-ink transition-colors', open || api.count ? 'border-[#2bb9bd]' : 'border-[#e7e7e7] hover:border-[#cfd1d2]')}
           >
             <ListFilter size={16} strokeWidth={1.75} />
             Filter
