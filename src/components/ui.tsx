@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { useRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { PixelIcon, type PixelIconName } from './PixelIcon'
 import { t, tv } from '../i18n'
 import { ArrowRight, Check, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -168,6 +168,37 @@ const inputBase = 'w-full bg-white border text-[11px] tracking-[-0.2px] text-ink
 // Inputs stay neutral by default; the brand border only marks the field being edited.
 export function inputClass() {
   return cx(inputBase, 'border-[#cfd1d2] hover:border-[#b5b9bb] focus:border-[#2bb9bd] focus-within:border-[#2bb9bd] focus:shadow-[0_0_0_3px_rgba(124,229,232,.25)] focus-within:shadow-[0_0_0_3px_rgba(124,229,232,.25)]')
+}
+
+/**
+ * Date / time field that opens the browser's picker on the first click anywhere in the box,
+ * instead of only on the tiny native indicator. Typing still works with the keyboard.
+ */
+export function PickerInput({ icon, type, value, onChange, label, tour, error }: { icon: ReactNode; type: 'date' | 'time'; value: string; onChange: (v: string) => void; label: string; tour?: string; error?: boolean }) {
+  const ref = useRef<HTMLInputElement>(null)
+  const open = () => {
+    const el = ref.current
+    if (!el) return
+    el.focus()
+    try { el.showPicker() } catch { /* picker already open or not supported: focus is enough */ }
+  }
+  return (
+    <label
+      data-tour={tour}
+      onClick={e => { e.preventDefault(); open() }}
+      className={cx(inputClass(), 'relative flex items-center gap-[8px] h-[38px] px-[9px] cursor-pointer', error && '!border-[#e05d5d]')}
+    >
+      <span className={value ? 'text-ink' : 'text-[#9a9fa1]'}>{icon}</span>
+      <input
+        ref={ref}
+        type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        aria-label={label}
+        className={cx('flex-1 min-w-0 bg-transparent outline-none text-[11px] cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden', value ? 'text-ink' : 'text-[#9a9fa1]')}
+      />
+    </label>
+  )
 }
 
 export function Select<T extends string | number>({ value, options, onChange, placeholder, format }: { value: T | ''; options: readonly T[]; onChange: (v: T) => void; placeholder?: string; format?: (v: T) => string }) {

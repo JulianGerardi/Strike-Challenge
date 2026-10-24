@@ -2,7 +2,7 @@ import { CalendarDays, Clock, Info } from 'lucide-react'
 import type { Depth, ExerciseDraft } from '../data'
 import { RECURRENCES, TIME_ZONES } from '../data'
 import { t, tv } from '../i18n'
-import { Badge, FieldLabel, PageHeader, SectionTitle, Select, Toggle, cx, inputClass } from '../components/ui'
+import { Badge, FieldLabel, PageHeader, PickerInput, SectionTitle, Select, Toggle, cx, inputClass } from '../components/ui'
 
 const DEPTHS: { id: Depth; text: () => string; recommended?: boolean }[] = [
   { id: 'Basic', text: () => t('Focus on common vulnerabilities and essential security checks.', 'Foco en vulnerabilidades comunes y controles de seguridad esenciales.') },
@@ -12,14 +12,6 @@ const DEPTHS: { id: Depth; text: () => string; recommended?: boolean }[] = [
 
 const card = 'bg-white rounded-[2px] p-[16px] sm:p-[22px] flex flex-col gap-[20px]'
 
-function IconInput({ icon, type, value, onChange, placeholder, tour, error }: { icon: React.ReactNode; type: 'date' | 'time'; value: string; onChange: (v: string) => void; placeholder: string; tour?: string; error?: boolean }) {
-  return (
-    <label data-tour={tour} className={cx(inputClass(), 'relative flex items-center gap-[8px] h-[38px] px-[9px]', error && '!border-[#e05d5d]', !value && 'text-[#9a9fa1]')}>
-      {icon}
-      <input type={type} value={value} onChange={e => onChange(e.target.value)} aria-label={placeholder} className={cx('flex-1 bg-transparent outline-none text-[11px]', value ? 'text-ink' : 'text-[#9a9fa1]', '[&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer')} />
-    </label>
-  )
-}
 
 export function ExerciseDetails({ draft, setDraft, showErrors }: { draft: ExerciseDraft; setDraft: (d: ExerciseDraft) => void; showErrors: boolean }) {
   const set = <K extends keyof ExerciseDraft>(k: K, v: ExerciseDraft[K]) => setDraft({ ...draft, [k]: v })
@@ -86,16 +78,16 @@ export function ExerciseDetails({ draft, setDraft, showErrors }: { draft: Exerci
       <section data-tour="schedule" className={card}>
         <SectionTitle icon="schedule" title={t('Schedule', 'Calendario')} caption={t('Set when testing activity is allowed to occur.', 'Definí cuándo puede ocurrir la actividad de testing.')} />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[14px]">
-          <div><FieldLabel>{t('Start date', 'Fecha de inicio')}</FieldLabel><IconInput tour="start-date" error={startMissing} type="date" icon={<CalendarDays size={16} />} value={draft.startDate} onChange={v => set('startDate', v)} placeholder={t('Pick a date', 'Elegí una fecha')} />{startMissing && <p className="mt-[4px] text-[10px] text-[#c23b3b]">{t('Pick a start date.', 'Elegí la fecha de inicio.')}</p>}</div>
+          <div><FieldLabel>{t('Start date', 'Fecha de inicio')}</FieldLabel><PickerInput tour="start-date" error={startMissing} type="date" icon={<CalendarDays size={16} />} value={draft.startDate} onChange={v => set('startDate', v)} label={t('Pick a date', 'Elegí una fecha')} />{startMissing && <p className="mt-[4px] text-[10px] text-[#c23b3b]">{t('Pick a start date.', 'Elegí la fecha de inicio.')}</p>}</div>
           <div>
             <FieldLabel>{t('End date', 'Fecha de fin')}</FieldLabel>
-            <IconInput type="date" error={endMissing || !!datesError} icon={<CalendarDays size={16} />} value={draft.endDate} onChange={v => set('endDate', v)} placeholder={t('Pick a date', 'Elegí una fecha')} />
+            <PickerInput type="date" error={endMissing || !!datesError} icon={<CalendarDays size={16} />} value={draft.endDate} onChange={v => set('endDate', v)} label={t('Pick a date', 'Elegí una fecha')} />
             {endMissing && <p className="mt-[4px] text-[10px] text-[#c23b3b]">{t('Pick an end date.', 'Elegí la fecha de fin.')}</p>}
             {datesError && <p className="mt-[4px] text-[10px] text-[#c23b3b]">{t('End date must be after the start date.', 'La fecha de fin debe ser posterior a la de inicio.')}</p>}
           </div>
           <div data-tour="recurrence"><FieldLabel>{t('Recurrence', 'Recurrencia')}</FieldLabel><Select value={draft.recurrence} options={RECURRENCES} placeholder={t('Select recurrence', 'Elegí la recurrencia')} onChange={v => set('recurrence', v)} /></div>
-          <div><FieldLabel>{t('Start time', 'Hora de inicio')}</FieldLabel><IconInput type="time" icon={<Clock size={16} />} value={draft.startTime} onChange={v => set('startTime', v)} placeholder={t('Pick a time', 'Elegí una hora')} /></div>
-          <div><FieldLabel>{t('End time', 'Hora de fin')}</FieldLabel><IconInput type="time" icon={<Clock size={16} />} value={draft.endTime} onChange={v => set('endTime', v)} placeholder={t('Pick a time', 'Elegí una hora')} /></div>
+          <div><FieldLabel>{t('Start time', 'Hora de inicio')}</FieldLabel><PickerInput type="time" icon={<Clock size={16} />} value={draft.startTime} onChange={v => set('startTime', v)} label={t('Pick a time', 'Elegí una hora')} /></div>
+          <div><FieldLabel>{t('End time', 'Hora de fin')}</FieldLabel><PickerInput type="time" icon={<Clock size={16} />} value={draft.endTime} onChange={v => set('endTime', v)} label={t('Pick a time', 'Elegí una hora')} /></div>
           <div><FieldLabel>{t('Time zone', 'Zona horaria')}</FieldLabel><Select value={draft.timeZone} options={TIME_ZONES} placeholder={t('Select a time zone', 'Elegí la zona horaria')} onChange={v => set('timeZone', v)} /></div>
         </div>
       </section>

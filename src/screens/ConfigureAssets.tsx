@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Check, Clock, Pencil, SlidersHorizontal, TriangleAlert, X } from 'lucide-react'
 import type { Asset, AssetOverrides, ExerciseDraft, SharedConfig, TimeWindow } from '../data'
 import { ASSETS, EXCLUDABLE_TESTS, RATE_LIMITS, effective, excludedLabel, formatDate, hasOverrides } from '../data'
-import { AssetMark, Badge, Button, Checkbox, FieldLabel, PageHeader, Segmented, Select, Td, Th, cx, inputClass } from '../components/ui'
+import { AssetMark, Badge, Button, Checkbox, FieldLabel, PageHeader, PickerInput, Segmented, Select, Td, Th, cx } from '../components/ui'
 import { PixelIcon } from '../components/PixelIcon'
 import { t, tv } from '../i18n'
 import { TableToolbar, useTableFilters, type FilterGroup } from '../components/TableToolbar'
@@ -30,10 +30,7 @@ function TimeInput({ value, onChange, label }: { value: string; onChange: (v: st
   return (
     <div className="flex-1">
       <FieldLabel>{label}</FieldLabel>
-      <label className={cx(inputClass(), 'relative flex items-center gap-[8px] h-[38px] px-[9px]')}>
-        <Clock size={16} />
-        <input type="time" value={value} onChange={e => onChange(e.target.value)} className="flex-1 bg-transparent outline-none text-[11px]" />
-      </label>
+      <PickerInput type="time" icon={<Clock size={16} />} value={value} onChange={onChange} label={label} />
     </div>
   )
 }
