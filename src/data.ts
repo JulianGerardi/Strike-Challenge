@@ -1,10 +1,14 @@
+import { locale, t, tv } from './i18n'
+
 export type ExerciseStatus = 'Complete' | 'Scheduled' | 'In progress' | 'Draft'
 
 export interface Exercise {
   id: string
   name: string
-  updated: string
+  /** 'now', a number of days ago, or an ISO date */
+  updated: 'now' | number | string
   assets: number
+  /** ISO date, or '' when not scheduled */
   schedule: string
   status: ExerciseStatus
   isNew?: boolean
@@ -65,17 +69,17 @@ export const RECURRENCES = ['Does not repeat', 'Weekly', 'Monthly', 'Quarterly']
 export const TIME_ZONES = ['UTC-5:00 East Time', 'UTC-3:00 Buenos Aires', 'UTC+0:00 London', 'UTC+1:00 Madrid']
 
 export const INITIAL_EXERCISES: Exercise[] = [
-  { id: 'EX-1984', name: 'Payments Perimeter Assessment', updated: 'Updated 2 days ago', assets: 3, schedule: 'May 24, 2026', status: 'Complete' },
-  { id: 'EX-1941', name: 'Payments Perimeter Assessment', updated: 'Updated Sep 18', assets: 7, schedule: 'May 24, 2026', status: 'Complete' },
-  { id: 'EX-1937', name: 'Customer Identity Review', updated: 'Updated 2 days ago', assets: 4, schedule: 'May 24, 2026', status: 'Complete' },
-  { id: 'EX-1922', name: 'Partner API Hardening', updated: 'Updated Sep 12', assets: 2, schedule: 'Jun 10, 2026', status: 'Scheduled' },
-  { id: 'EX-1918', name: 'Customer Identity Review', updated: 'Updated Sep 9', assets: 4, schedule: 'May 24, 2026', status: 'Complete' },
-  { id: 'EX-1903', name: 'Mobile Checkout Assessment', updated: 'Updated Sep 2', assets: 5, schedule: 'Apr 30, 2026', status: 'In progress' },
-  { id: 'EX-1897', name: 'Payments Perimeter Assessment', updated: 'Updated Aug 28', assets: 7, schedule: 'May 24, 2026', status: 'Complete' },
-  { id: 'EX-1880', name: 'Internal Tools Review', updated: 'Updated Aug 21', assets: 1, schedule: 'Not scheduled', status: 'Draft' },
-  { id: 'EX-1874', name: 'Customer Identity Review', updated: 'Updated Aug 19', assets: 4, schedule: 'May 24, 2026', status: 'Complete' },
-  { id: 'EX-1861', name: 'Marketing Site Assessment', updated: 'Updated Aug 3', assets: 2, schedule: 'Jul 2, 2026', status: 'Scheduled' },
-  { id: 'EX-1855', name: 'Customer Identity Review', updated: 'Updated Jul 30', assets: 4, schedule: 'May 24, 2026', status: 'Complete' },
+  { id: 'EX-1984', name: 'Payments Perimeter Assessment', updated: 2, assets: 3, schedule: '2026-05-24', status: 'Complete' },
+  { id: 'EX-1941', name: 'Payments Perimeter Assessment', updated: '2025-09-18', assets: 7, schedule: '2026-05-24', status: 'Complete' },
+  { id: 'EX-1937', name: 'Customer Identity Review', updated: 2, assets: 4, schedule: '2026-05-24', status: 'Complete' },
+  { id: 'EX-1922', name: 'Partner API Hardening', updated: '2025-09-12', assets: 2, schedule: '2026-06-10', status: 'Scheduled' },
+  { id: 'EX-1918', name: 'Customer Identity Review', updated: '2025-09-09', assets: 4, schedule: '2026-05-24', status: 'Complete' },
+  { id: 'EX-1903', name: 'Mobile Checkout Assessment', updated: '2025-09-02', assets: 5, schedule: '2026-04-30', status: 'In progress' },
+  { id: 'EX-1897', name: 'Payments Perimeter Assessment', updated: '2025-08-28', assets: 7, schedule: '2026-05-24', status: 'Complete' },
+  { id: 'EX-1880', name: 'Internal Tools Review', updated: '2025-08-21', assets: 1, schedule: '', status: 'Draft' },
+  { id: 'EX-1874', name: 'Customer Identity Review', updated: '2025-08-19', assets: 4, schedule: '2026-05-24', status: 'Complete' },
+  { id: 'EX-1861', name: 'Marketing Site Assessment', updated: '2025-08-03', assets: 2, schedule: '2026-07-02', status: 'Scheduled' },
+  { id: 'EX-1855', name: 'Customer Identity Review', updated: '2025-07-30', assets: 4, schedule: '2026-05-24', status: 'Complete' },
 ]
 
 export const ASSETS: Asset[] = [
@@ -116,7 +120,7 @@ export const DEFAULT_DRAFT: ExerciseDraft = {
   startTime: '09:00',
   endTime: '18:00',
   timeZone: 'UTC-5:00 East Time',
-  humanValidation: true,
+  humanValidation: false,
   validationNotes: 'Prioritize validation of authentication and authorization findings.',
 }
 
@@ -136,9 +140,18 @@ export function hasOverrides(o: AssetOverrides | undefined) {
 export function formatDate(iso: string) {
   if (!iso) return '—'
   const d = new Date(iso + 'T00:00:00')
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return d.toLocaleDateString(locale(), { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+export function formatUpdated(u: Exercise['updated']) {
+  if (u === 'now') return t('Updated just now', 'Actualizado recién')
+  if (typeof u === 'number') return t(`Updated ${u} days ago`, `Actualizado hace ${u} días`)
+  const d = new Date(u + 'T00:00:00').toLocaleDateString(locale(), { month: 'short', day: 'numeric' })
+  return t(`Updated ${d}`, `Actualizado el ${d}`)
+}
+
+export const formatSchedule = (iso: string) => (iso ? formatDate(iso) : t('Not scheduled', 'Sin programar'))
+
 export function excludedLabel(list: string[]) {
-  return list.length ? list.join(', ') : 'None'
+  return list.length ? list.map(tv).join(', ') : t('None', 'Ninguna')
 }

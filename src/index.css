@@ -32,6 +32,22 @@ button:disabled { cursor: not-allowed; }
 .smiley.is-intro .smiley-cheek { opacity: .55; }
 .greet { animation: greet-in .9s steps(11) .25s both; }
 
+/* Floating assistant launcher */
+@keyframes bot-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes bot-ping { 0%, 70% { box-shadow: 0 0 0 0 rgba(124,229,232,.7); } 100% { box-shadow: 0 0 0 16px rgba(124,229,232,0); } }
+@keyframes bot-blink { 0%, 90%, 100% { transform: scaleY(1); } 94% { transform: scaleY(.15); } }
+@keyframes bot-antenna { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+@keyframes bot-wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-12deg); } 60% { transform: rotate(9deg); } }
+@keyframes bot-swap { from { transform: rotate(-90deg) scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes chat-pop { from { opacity: 0; transform: translateX(14px) scale(.96); } to { opacity: 1; transform: none; } }
+.bot-launcher.is-floating { animation: bot-float 3.2s ease-in-out infinite; }
+.bot-launcher.is-floating .bot-ping { animation: bot-ping 3.2s ease-out infinite; }
+.bot-launcher:hover .bot-swap { animation: bot-wiggle .5s ease; }
+.bot-swap { animation: bot-swap .3s cubic-bezier(.3,1.4,.5,1); }
+.bot-eye { transform-box: fill-box; transform-origin: center; animation: bot-blink 3.8s infinite; }
+.bot-antenna { animation: bot-antenna 1.6s ease-in-out infinite; }
+.chat-pop { animation: chat-pop .28s cubic-bezier(.3,1.2,.5,1) both; transform-origin: right center; }
+
 /* Pixel icons build in pixel by pixel */
 @keyframes px-in { from { opacity: 0; } to { opacity: 1; } }
 .px-in { animation: px-in .18s ease both; }

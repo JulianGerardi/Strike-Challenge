@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ListFilter, Search, X } from 'lucide-react'
 import { Checkbox, cx } from './ui'
+import { t, tv } from '../i18n'
 
 export interface FilterGroup<T> {
   key: string
@@ -85,7 +86,7 @@ export function TableToolbar<T>({ api, groups, placeholder, right }: { api: Filt
               className="w-full bg-transparent outline-none text-[10px] tracking-[-0.2px] text-ink placeholder:text-[#9a9fa1]"
             />
             {api.query && (
-              <button onClick={() => api.setQuery('')} aria-label="Clear search" className="text-[#9a9fa1] hover:text-ink"><X size={13} /></button>
+              <button onClick={() => api.setQuery('')} aria-label={t('Clear search', 'Borrar búsqueda')} className="text-[#9a9fa1] hover:text-ink"><X size={13} /></button>
             )}
           </label>
         </div>
@@ -96,23 +97,23 @@ export function TableToolbar<T>({ api, groups, placeholder, right }: { api: Filt
             className={cx('flex items-center gap-[7px] h-[33px] px-[14px] border bg-white font-fono font-medium text-[10px] leading-[10px] uppercase tracking-[0.3px] text-brand-ink transition-colors', open || api.count ? 'border-[#2bb9bd]' : 'border-[#e7e7e7] hover:border-[#cfd1d2]')}
           >
             <ListFilter size={16} strokeWidth={1.75} />
-            Filter
+            {t('Filter', 'Filtrar')}
             {api.count > 0 && <span className="grid place-items-center min-w-[16px] h-[16px] px-[4px] bg-brand text-[9px] font-sans font-bold">{api.count}</span>}
           </button>
           {open && (
             <div className="fade-up absolute z-30 left-0 top-[39px] w-[260px] bg-white border border-[#e5e5e5] shadow-[0_12px_32px_rgba(17,19,21,.12)]">
               <div className="flex items-center justify-between px-[14px] h-[38px] border-b border-[#eee]">
-                <span className="text-[11px] font-semibold">Filter by</span>
-                <button onClick={api.clear} disabled={!api.count} className="text-[10px] font-semibold text-[#2b9ea2] disabled:text-[#c3c6c7] uppercase tracking-[0.3px]">Clear all</button>
+                <span className="text-[11px] font-semibold">{t('Filter by', 'Filtrar por')}</span>
+                <button onClick={api.clear} disabled={!api.count} className="text-[10px] font-semibold text-[#2b9ea2] disabled:text-[#c3c6c7] uppercase tracking-[0.3px]">{t('Clear all', 'Limpiar todo')}</button>
               </div>
               <div className="max-h-[360px] overflow-auto py-[6px]">
                 {groups.map(g => (
                   <div key={g.key} className="px-[14px] py-[8px]">
-                    <p className="text-[9px] uppercase tracking-[0.6px] text-[#73787a] mb-[6px]">{g.label}</p>
+                    <p className="text-[9px] uppercase tracking-[0.6px] text-[#73787a] mb-[6px]">{tv(g.label)}</p>
                     <div className="flex flex-col gap-[7px]">
                       {api.options[g.key].map(o => (
                         <div key={o.value} className="flex items-center justify-between">
-                          <Checkbox checked={(api.active[g.key] ?? []).includes(o.value)} onChange={() => api.toggle(g.key, o.value)} label={o.value} />
+                          <Checkbox checked={(api.active[g.key] ?? []).includes(o.value)} onChange={() => api.toggle(g.key, o.value)} label={tv(o.value)} />
                           <span className="text-[10px] text-[#9a9fa1]">{o.count}</span>
                         </div>
                       ))}
@@ -129,11 +130,11 @@ export function TableToolbar<T>({ api, groups, placeholder, right }: { api: Filt
         <div className="flex flex-wrap items-center gap-[6px] mt-[10px]">
           {chips.map(c => (
             <span key={c.key + c.value} className="fade-up inline-flex items-center gap-[5px] h-[22px] pl-[8px] pr-[4px] bg-brand-soft border border-[#bde7e9] text-[10px] text-[#17575a]">
-              <span className="text-[#5d8e90]">{c.label}:</span> {c.value}
-              <button onClick={() => api.toggle(c.key, c.value)} aria-label={`Remove ${c.value}`} className="grid place-items-center size-[14px] hover:bg-black/10"><X size={10} /></button>
+              <span className="text-[#5d8e90]">{tv(c.label)}:</span> {tv(c.value)}
+              <button onClick={() => api.toggle(c.key, c.value)} aria-label={`${t('Remove', 'Quitar')} ${tv(c.value)}`} className="grid place-items-center size-[14px] hover:bg-black/10"><X size={10} /></button>
             </span>
           ))}
-          <button onClick={api.clear} className="text-[10px] font-semibold text-[#2b9ea2] hover:underline ml-[4px]">Clear filters</button>
+          <button onClick={api.clear} className="text-[10px] font-semibold text-[#2b9ea2] hover:underline ml-[4px]">{t('Clear filters', 'Limpiar filtros')}</button>
         </div>
       )}
     </div>

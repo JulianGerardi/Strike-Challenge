@@ -1,20 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowRight, Check, X } from 'lucide-react'
 import type { AssetOverrides, Exercise, ExerciseDraft, SharedConfig } from './data'
-import { ASSETS, DEFAULT_DRAFT, DEFAULT_SHARED, INITIAL_EXERCISES, SEED_OVERRIDES, formatDate, hasOverrides } from './data'
+import { ASSETS, DEFAULT_DRAFT, DEFAULT_SHARED, INITIAL_EXERCISES, SEED_OVERRIDES, hasOverrides } from './data'
 import { Header, Shell, Sidebar } from './components/Layout'
 import { Button, FormFooter, Stepper } from './components/ui'
-import { Assistant, AssistantLauncher, GUIDES, TourOverlay, type GuideId, type Screen } from './components/Assistant'
+import { Assistant, AssistantLauncher, TourOverlay, guides, type GuideId, type Screen } from './components/Assistant'
 import { ExercisesList } from './screens/ExercisesList'
 import { ExerciseDetails } from './screens/ExerciseDetails'
 import { SelectAssets } from './screens/SelectAssets'
 import { AssetDrawer, BulkEditModal, ConfigureAssets, ConfirmBulkModal, describeChanges, type BulkChanges } from './screens/ConfigureAssets'
 import { Review } from './screens/Review'
 import { ExerciseCreated } from './screens/ExerciseCreated'
+import { getLang, setCurrentLang, t, type Lang } from './i18n'
 
 const ORDER: Screen[] = ['details', 'assets', 'configure', 'review']
 const DEMO_SELECTION = ['a1', 'a2', 'a4']
-const NUMBER_WORDS = ['cero', 'un', 'dos', 'tres', 'cuatro']
+const NUMBER_WORDS = { en: ['zero', 'one', 'two', 'three', 'four'], es: ['cero', 'un', 'dos', 'tres', 'cuatro'] }
 
 function freshBulk(shared: SharedConfig): BulkChanges {
   const base = { mode: 'Keep current' as const, ...shared }
@@ -22,6 +23,11 @@ function freshBulk(shared: SharedConfig): BulkChanges {
 }
 
 export default function App() {
+  const [lang, setLangState] = useState<Lang>(getLang)
+  const setLang = (l: Lang) => {
+    setCurrentLang(l)
+    setLangState(l)
+  }
   const [screen, setScreen] = useState<Screen>('list')
   const [exercises, setExercises] = useState<Exercise[]>(INITIAL_EXERCISES)
   const [draft, setDraft] = useState<ExerciseDraft>(DEFAULT_DRAFT)
@@ -75,7 +81,7 @@ export default function App() {
       setConfirming(false)
       setDrawer(null)
       setTour({ guide, index })
-      const s = GUIDES[guide].steps[index].screen
+      const s = guides()[guide].steps[index].screen
       if (s !== screen) go(s)
     },
     [go, screen],
@@ -84,7 +90,7 @@ export default function App() {
   const moveTour = useCallback(
     (delta: number) => {
       if (!tour) return
-      const steps = GUIDES[tour.guide].steps
+      const steps = guides()[tour.guide].steps
       const index = tour.index + delta
       if (index < 0) return
       if (index >= steps.length) {
@@ -105,7 +111,7 @@ export default function App() {
   const advanceFrom = useCallback((from: number) => {
     setTour(t => {
       if (!t || t.index !== from) return t
-      const steps = GUIDES[t.guide].steps
+      const steps = guides()[t.guide].steps
       const next = steps[from + 1]
       if (!next) return null
       return next.screen === screenRef.current ? { ...t, index: from + 1 } : t
@@ -115,7 +121,7 @@ export default function App() {
   // Keep the tour in sync when the user moves through the flow on their own.
   useEffect(() => {
     if (!tour) return
-    const steps = GUIDES[tour.guide].steps
+    const steps = guides()[tour.guide].steps
     if (steps[tour.index].screen === screen) return
     const ahead = steps.findIndex((s, i) => i > tour.index && s.screen === screen)
     const any = steps.findIndex(s => s.screen === screen)
@@ -133,7 +139,7 @@ export default function App() {
     const target = returnTo ?? next
     setReturnTo(null)
     go(target)
-    if (returnTo) setToast('Cambios guardados')
+    if (returnTo) setToast(t('Changes saved', 'Cambios guardados'))
   }
 
   const editFrom = (target: Screen, origin: Screen) => {
@@ -157,7 +163,7 @@ export default function App() {
       const custom = selected.filter(a => hasOverrides(overrides[a])).length
       setCreated({ id, assets: selected.length, custom })
       setExercises(list => [
-        { id, name: draft.name, updated: 'Updated just now', assets: selected.length, schedule: formatDate(draft.startDate), status: 'Complete', isNew: true },
+        { id, name: draft.name, updated: 'now', assets: selected.length, schedule: draft.startDate, status: 'Complete', isNew: true },
         ...list.map(e => ({ ...e, isNew: false })),
       ])
       setHappy(true)
@@ -204,7 +210,8 @@ export default function App() {
     setConfirming(false)
     setChecked([])
     const n = lines.length
-    setToast(`Aplicaste ${NUMBER_WORDS[n] ?? n} ${n === 1 ? 'cambio' : 'cambios'} a los assets`)
+    const word = NUMBER_WORDS[lang][n] ?? n
+    setToast(t(`Applied ${word} ${n === 1 ? 'change' : 'changes'} to the assets`, `Aplicaste ${word} ${n === 1 ? 'cambio' : 'cambios'} a los assets`))
   }
 
   const drawerAsset = drawer ? ASSETS.find(a => a.id === drawer) : undefined
@@ -213,14 +220,14 @@ export default function App() {
   return (
     <div className="flex min-h-screen bg-[#fafafa]">
       <Sidebar onHome={() => { setReturnTo(null); go('list') }} />
-      <Shell header={<Header introKey={screen} happy={happy} onSmiley={() => { setHappy(true); setChatOpen(true) }} />}>
+      <Shell header={<Header lang={lang} onLang={setLang} introKey={screen} happy={happy} onSmiley={() => { setHappy(true); setChatOpen(true) }} />}>
         {stepIndex >= 0 && <Stepper active={stepIndex} editing={!!returnTo} onGo={i => { setReturnTo(null); go(ORDER[i]) }} />}
 
         <div key={screen} className="fade-up flex flex-col gap-[18px]">
           {returnTo && stepIndex >= 0 && (
             <div className="flex items-center gap-[10px] px-[14px] py-[10px] bg-[#eefafa] border border-[#cbe9ea] text-[11px] text-[#285b5e]">
-              <span className="font-semibold">Editing from {returnTo === 'review' ? 'Review' : 'Configure'}.</span>
-              <span>Save your changes to go straight back. You won't need to repeat the other steps.</span>
+              <span className="font-semibold">{returnTo === 'review' ? t('Editing from Review.', 'Editando desde la revisión.') : t('Editing from Configure.', 'Editando desde Configurar.')}</span>
+              <span>{t("Save your changes to go straight back. You won't need to repeat the other steps.", 'Guardá los cambios para volver directo. No vas a tener que repetir los otros pasos.')}</span>
             </div>
           )}
           {screen === 'list' && <ExercisesList exercises={exercises} onCreate={resetFlow} />}
@@ -249,26 +256,26 @@ export default function App() {
               <FormFooter
                 tourId="continue"
                 onCancel={onBack}
-                cancelLabel={returnTo || screen === 'details' ? 'Cancel' : 'Back'}
+                cancelLabel={returnTo || screen === 'details' ? t('Cancel', 'Cancelar') : t('Back', 'Atrás')}
                 onContinue={onContinue}
-                continueLabel={screen === 'review' ? 'Create exercise' : returnTo === 'review' ? 'Save and return to review' : returnTo ? 'Save and return' : 'Continue'}
+                continueLabel={screen === 'review' ? t('Create exercise', 'Crear ejercicio') : returnTo === 'review' ? t('Save and return to review', 'Guardar y volver a la revisión') : returnTo ? t('Save and return', 'Guardar y volver') : t('Continue', 'Continuar')}
               />
             </div>
           )}
           {screen === 'created' && (
             <div className="flex justify-end pt-[48px] sm:pt-[120px]">
-              <Button className="min-w-[108px] h-[40px] px-[15px]" onClick={() => go('list')} iconRight={<ArrowRight size={16} strokeWidth={1.75} />}>Continue</Button>
+              <Button className="min-w-[108px] h-[40px] px-[15px]" onClick={() => go('list')} iconRight={<ArrowRight size={16} strokeWidth={1.75} />}>{t('Continue', 'Continuar')}</Button>
             </div>
           )}
         </div>
-        <AssistantLauncher open={chatOpen} onToggle={() => setChatOpen(!chatOpen)} />
       </Shell>
+      <AssistantLauncher open={chatOpen} hidden={!!tour} onToggle={() => setChatOpen(!chatOpen)} />
 
       {toast && (
-        <div role="status" className="fade-up fixed z-40 bottom-[72px] left-[12px] md:left-[112px] flex items-center gap-[10px] w-[min(344px,calc(100vw-24px))] min-h-[37px] py-[8px] px-[12px] bg-[#e8f8ef] border border-[#c4ecd6] text-[11px] font-semibold">
+        <div role="status" className="fade-up fixed z-40 bottom-[16px] left-[12px] md:left-[112px] flex items-center gap-[10px] w-[min(344px,calc(100vw-24px))] min-h-[37px] py-[8px] px-[12px] bg-[#e8f8ef] border border-[#c4ecd6] text-[11px] font-semibold">
           <Check size={15} />
           <span className="flex-1">{toast}</span>
-          <button onClick={() => setToast(null)} aria-label="Cerrar"><X size={15} /></button>
+          <button onClick={() => setToast(null)} aria-label={t('Close', 'Cerrar')}><X size={15} /></button>
         </div>
       )}
 
@@ -288,7 +295,7 @@ export default function App() {
           onSave={o => {
             setOverrides(prev => ({ ...prev, [drawerAsset.id]: o }))
             setDrawer(null)
-            setToast(`Guardaste la configuración de ${drawerAsset.name}`)
+            setToast(t(`Saved the settings for ${drawerAsset.name}`, `Guardaste la configuración de ${drawerAsset.name}`))
           }}
         />
       )}
@@ -296,9 +303,9 @@ export default function App() {
       <Assistant open={chatOpen} setOpen={setChatOpen} screen={screen} tour={tour} onStartTour={startTour} />
       {tour && (
         <TourOverlay
-          step={GUIDES[tour.guide].steps[tour.index]}
+          step={guides()[tour.guide].steps[tour.index]}
           index={tour.index}
-          total={GUIDES[tour.guide].steps.length}
+          total={guides()[tour.guide].steps.length}
           onNext={() => moveTour(1)}
           onPrev={() => moveTour(-1)}
           onClose={() => setTour(null)}

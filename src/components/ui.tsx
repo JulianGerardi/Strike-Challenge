@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import { PixelIcon, type PixelIconName } from './PixelIcon'
+import { t, tv } from '../i18n'
 import { ArrowRight, Check, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(' ')
@@ -28,7 +29,7 @@ export function Button({ variant = 'primary', icon, iconRight, className, childr
   )
 }
 
-export function FormFooter({ onCancel, onContinue, continueLabel = 'Continue', cancelLabel = 'Cancel', disabled, tourId }: { onCancel: () => void; onContinue: () => void; continueLabel?: string; cancelLabel?: string; disabled?: boolean; tourId?: string }) {
+export function FormFooter({ onCancel, onContinue, continueLabel = t('Continue', 'Continuar'), cancelLabel = t('Cancel', 'Cancelar'), disabled, tourId }: { onCancel: () => void; onContinue: () => void; continueLabel?: string; cancelLabel?: string; disabled?: boolean; tourId?: string }) {
   return (
     <div className="flex justify-end items-center">
       <Button variant="ghost" className="w-[108px] h-[40px]" onClick={onCancel}>{cancelLabel}</Button>
@@ -56,7 +57,7 @@ export function Badge({ children, tone }: { children: ReactNode; tone?: string }
   const key = tone ?? (typeof children === 'string' ? children : 'soft')
   return (
     <span className={cx('inline-flex items-center justify-center px-[7px] py-[3px] border rounded-[1px] font-[680] font-bold text-[8px] leading-[12px] tracking-[0.3px] uppercase whitespace-nowrap', BADGE_STYLES[key] ?? BADGE_STYLES.soft)}>
-      {children}
+      {typeof children === 'string' ? tv(children) : children}
     </span>
   )
 }
@@ -137,7 +138,7 @@ export function Stepper({ active, onGo, editing }: { active: number; onGo?: (i: 
                     i + 1
                   )}
                 </span>
-                <span className={cx('text-[10px] leading-[15px] font-medium uppercase tracking-[-0.016px] whitespace-nowrap transition-colors duration-500', !current && 'hidden sm:inline', done ? 'text-brand-dark' : current ? 'text-ink' : 'text-[#8b9092]')}>{label}</span>
+                <span className={cx('text-[10px] leading-[15px] font-medium uppercase tracking-[-0.016px] whitespace-nowrap transition-colors duration-500', !current && 'hidden sm:inline', done ? 'text-brand-dark' : current ? 'text-ink' : 'text-[#8b9092]')}>{tv(label)}</span>
               </button>
               {i < STEPS.length - 1 && (
                 <span className="relative flex-1 h-px mx-[8px] sm:mx-[16px] bg-[#d7d9da] overflow-hidden">
@@ -163,8 +164,9 @@ export function FieldLabel({ children }: { children: ReactNode }) {
 
 const inputBase = 'w-full bg-white border text-[11px] tracking-[-0.2px] text-ink outline-none transition-colors placeholder:text-[#9a9fa1]'
 
-export function inputClass(filled: boolean) {
-  return cx(inputBase, filled ? 'border-[#2bb9bd]' : 'border-[#cfd1d2]', 'focus:border-[#2bb9bd] focus:shadow-[0_0_0_3px_rgba(124,229,232,.25)]')
+// Inputs stay neutral by default; the brand border only marks the field being edited.
+export function inputClass() {
+  return cx(inputBase, 'border-[#cfd1d2] hover:border-[#b5b9bb] focus:border-[#2bb9bd] focus-within:border-[#2bb9bd] focus:shadow-[0_0_0_3px_rgba(124,229,232,.25)] focus-within:shadow-[0_0_0_3px_rgba(124,229,232,.25)]')
 }
 
 export function Select<T extends string | number>({ value, options, onChange, placeholder, format }: { value: T | ''; options: readonly T[]; onChange: (v: T) => void; placeholder?: string; format?: (v: T) => string }) {
@@ -177,11 +179,11 @@ export function Select<T extends string | number>({ value, options, onChange, pl
           const opt = options.find(o => String(o) === raw)
           if (opt !== undefined) onChange(opt)
         }}
-        className={cx(inputClass(value !== ''), 'appearance-none h-[38px] px-[10px] pr-[30px]')}
+        className={cx(inputClass(), 'appearance-none h-[38px] px-[10px] pr-[30px]')}
       >
         {placeholder && <option value="" disabled>{placeholder}</option>}
         {options.map(o => (
-          <option key={String(o)} value={String(o)}>{format ? format(o) : String(o)}</option>
+          <option key={String(o)} value={String(o)}>{format ? format(o) : tv(String(o))}</option>
         ))}
       </select>
       <ChevronDown size={16} className="absolute right-[10px] top-1/2 -translate-y-1/2 pointer-events-none text-ink" />
@@ -204,7 +206,7 @@ export function Segmented<T extends string>({ value, options, onChange, size = '
             value === o ? 'bg-brand text-ink shadow-[0_1px_0_rgba(0,0,0,.04)]' : 'text-[#505557] hover:text-ink',
           )}
         >
-          {o}
+          {tv(o)}
         </button>
       ))}
     </div>
@@ -264,10 +266,10 @@ export function Pagination({ page, pageSize, total, onPage, noun }: { page: numb
   return (
     <div className="flex items-center justify-between min-h-[52px] px-[16px] py-[8px] border-t border-[#e7e7e7] bg-white">
       <p className="text-[12px] leading-[16px] font-semibold text-[#71717a]">
-        {total === 0 ? `No ${noun.toLowerCase()} match your filters` : `Showing ${from} to ${to} of ${total} ${noun.toLowerCase()}`}
+        {total === 0 ? t(`No ${noun} match your filters`, `Ningún resultado coincide con los filtros`) : t(`Showing ${from} to ${to} of ${total} ${noun}`, `Mostrando ${from} a ${to} de ${total} ${noun}`)}
       </p>
       <div className="flex items-center gap-[4px]">
-        <button disabled={page <= 1} onClick={() => onPage(page - 1)} className="grid place-items-center size-[28px] rounded-[6px] disabled:opacity-40 hover:bg-black/5" aria-label="Previous page">
+        <button disabled={page <= 1} onClick={() => onPage(page - 1)} className="grid place-items-center size-[28px] rounded-[6px] disabled:opacity-40 hover:bg-black/5" aria-label={t('Previous page', 'Página anterior')}>
           <ChevronLeft size={16} />
         </button>
         {Array.from({ length: pages }, (_, i) => i + 1).map(p => (
@@ -275,7 +277,7 @@ export function Pagination({ page, pageSize, total, onPage, noun }: { page: numb
             {p}
           </button>
         ))}
-        <button disabled={page >= pages} onClick={() => onPage(page + 1)} className="grid place-items-center size-[28px] rounded-[6px] disabled:opacity-40 hover:bg-black/5" aria-label="Next page">
+        <button disabled={page >= pages} onClick={() => onPage(page + 1)} className="grid place-items-center size-[28px] rounded-[6px] disabled:opacity-40 hover:bg-black/5" aria-label={t('Next page', 'Página siguiente')}>
           <ChevronRight size={16} />
         </button>
       </div>

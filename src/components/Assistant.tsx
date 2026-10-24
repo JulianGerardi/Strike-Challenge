@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ArrowRight, Bot, MapPin, MousePointerClick, Send, X } from 'lucide-react'
 import { STEPS, cx } from './ui'
+import { getLang, t, tv } from '../i18n'
 
 export type Screen = 'list' | 'details' | 'assets' | 'configure' | 'review' | 'created'
 
-export const SCREEN_LABEL: Record<Screen, string> = {
-  list: 'Listado de ejercicios',
-  details: 'Paso 1 · Exercise details',
-  assets: 'Paso 2 · Select assets',
-  configure: 'Paso 3 · Configure',
-  review: 'Paso 4 · Review',
-  created: 'Ejercicio creado',
-}
+export const screenLabel = (s: Screen) =>
+  ({
+    list: t('Exercise list', 'Listado de ejercicios'),
+    details: t('Step 1 · Exercise details', 'Paso 1 · Detalles del ejercicio'),
+    assets: t('Step 2 · Select assets', 'Paso 2 · Seleccionar assets'),
+    configure: t('Step 3 · Configure', 'Paso 3 · Configurar'),
+    review: t('Step 4 · Review', 'Paso 4 · Revisión'),
+    created: t('Exercise created', 'Ejercicio creado'),
+  })[s]
 
 export interface TourStep {
   screen: Screen
@@ -25,26 +27,26 @@ export interface TourStep {
 
 export type GuideId = 'create' | 'apply'
 
-export const GUIDES: Record<GuideId, { title: string; intro: string; steps: TourStep[] }> = {
+const GUIDES_ES: Record<GuideId, { title: string; intro: string; steps: TourStep[] }> = {
   create: {
     title: 'Cómo crear un ejercicio',
     intro: 'Un ejercicio agrupa varios assets relacionados bajo una misma configuración. Se crea en 4 etapas:',
     steps: [
-      { screen: 'list', target: 'create-exercise', title: 'Creá el ejercicio', text: 'Hacé clic en “Create exercise” para abrir el flujo guiado.', click: true },
-      { screen: 'details', target: 'exercise-name', title: 'Poné un nombre', text: 'Escribí un nombre que tu equipo reconozca, por ejemplo “Q4 Commerce Security Assessment”.' },
+      { screen: 'list', target: 'create-exercise', title: 'Creá el ejercicio', text: 'Hacé clic en “Crear ejercicio” para abrir el flujo guiado.', click: true },
+      { screen: 'details', target: 'exercise-name', title: 'Poné un nombre', text: 'Escribí un nombre que tu equipo reconozca, por ejemplo “Evaluación de seguridad Q4”.' },
       { screen: 'details', target: 'objective', title: 'Contá el objetivo', text: 'Describí qué querés evaluar. Tenés hasta 400 caracteres.' },
-      { screen: 'details', target: 'depth-options', title: 'Elegí la profundidad', text: 'Seleccioná Basic, Standard o Comprehensive. Aplica a todos los assets del ejercicio.' },
+      { screen: 'details', target: 'depth-options', title: 'Elegí la profundidad', text: 'Seleccioná Básico, Estándar o Exhaustivo. Aplica a todos los assets del ejercicio.' },
       { screen: 'details', target: 'start-date', title: 'Definí las fechas', text: 'Elegí la fecha de inicio y luego la de fin. Abajo podés ajustar la ventana horaria.' },
       { screen: 'details', target: 'recurrence', title: 'Recurrencia', text: 'Indicá si el ejercicio se repite o es una única vez.' },
-      { screen: 'details', target: 'validation-toggle', title: 'Validación humana', text: 'Activalo si querés que un especialista valide los hallazgos automáticos.' },
-      { screen: 'details', target: 'continue', title: 'Pasá a los assets', text: 'Hacé clic en “Continue” para seleccionar los assets.', click: true },
-      { screen: 'assets', target: 'filter', title: 'Filtrá el inventario', text: 'Usá “Filter” para acotar por tipo, entorno o estado. También podés buscar por nombre.' },
+      { screen: 'details', target: 'validation-toggle', title: 'Validación humana', text: 'Viene apagado. Activalo si querés que un especialista valide los hallazgos automáticos.' },
+      { screen: 'details', target: 'continue', title: 'Pasá a los assets', text: 'Hacé clic en “Continuar” para seleccionar los assets.', click: true },
+      { screen: 'assets', target: 'filter', title: 'Filtrá el inventario', text: 'Usá “Filtrar” para acotar por tipo, entorno o estado. También podés buscar por nombre.' },
       { screen: 'assets', target: 'asset-row', title: 'Seleccioná un asset', text: 'Hacé clic en la fila para sumarla al ejercicio. Repetí con todos los que necesites.', click: true },
       { screen: 'assets', target: 'selection-count', title: 'Revisá cuántos llevás', text: 'El contador muestra cuántos assets van en el ejercicio.' },
-      { screen: 'assets', target: 'continue', title: 'Configurá los assets', text: 'Hacé clic en “Continue” para pasar a la configuración.', click: true },
-      { screen: 'configure', target: 'continue', title: 'Configuración', text: 'Los assets ya heredan los valores del ejercicio. Si no necesitás cambios, hacé clic en “Continue”.', click: true },
-      { screen: 'review', target: 'readiness', title: 'Revisá antes de crear', text: 'Este panel te avisa si falta algo. Si necesitás cambiar algo, usá “Edit” en la sección y volvés directo acá.' },
-      { screen: 'review', target: 'continue', title: 'Creá el ejercicio', text: 'Hacé clic en “Create exercise”. Esto no inicia las pruebas todavía.', click: true },
+      { screen: 'assets', target: 'continue', title: 'Configurá los assets', text: 'Hacé clic en “Continuar” para pasar a la configuración.', click: true },
+      { screen: 'configure', target: 'continue', title: 'Configuración', text: 'Los assets ya heredan los valores del ejercicio. Si no necesitás cambios, hacé clic en “Continuar”.', click: true },
+      { screen: 'review', target: 'readiness', title: 'Revisá antes de crear', text: 'Este panel te avisa si falta algo. Si necesitás cambiar algo, usá “Editar” en la sección y volvés directo acá.' },
+      { screen: 'review', target: 'continue', title: 'Creá el ejercicio', text: 'Hacé clic en “Crear ejercicio”. Esto no inicia las pruebas todavía.', click: true },
     ],
   },
   apply: {
@@ -52,18 +54,61 @@ export const GUIDES: Record<GuideId, { title: string; intro: string; steps: Tour
     intro: 'Los assets heredan la configuración del ejercicio. Podés cambiarla en bloque o asset por asset:',
     steps: [
       { screen: 'configure', target: 'select-all', title: 'Seleccioná los assets', text: 'Marcá la casilla para seleccionar todos (o marcá fila por fila).', click: true },
-      { screen: 'configure', target: 'add-setting', title: 'Abrí la edición masiva', text: 'Hacé clic en “Add setting” para cambiar un parámetro en todos los seleccionados.', click: true },
-      { screen: 'configure', target: 'bulk-mode-rateLimit', title: 'Elegí qué cambiar', text: 'En “Rate limit” elegí “Apply new” y seleccioná el valor. Lo que dejes en “Keep current” no se toca.' },
-      { screen: 'configure', target: 'bulk-save', title: 'Guardá', text: 'Hacé clic en “Save changes”.', click: true },
+      { screen: 'configure', target: 'add-setting', title: 'Abrí la edición masiva', text: 'Hacé clic en “Editar configuración” para cambiar un parámetro en todos los seleccionados.', click: true },
+      { screen: 'configure', target: 'bulk-mode-rateLimit', title: 'Elegí qué cambiar', text: 'En “Rate limit” elegí “Aplicar nuevo” y seleccioná el valor. Lo que dejes en “Mantener” no se toca.' },
+      { screen: 'configure', target: 'bulk-save', title: 'Guardá', text: 'Hacé clic en “Guardar cambios”.', click: true },
       { screen: 'configure', target: 'confirm-save', title: 'Confirmá el impacto', text: 'Revisá qué campos y cuántos assets cambian, y confirmá.', click: true },
       { screen: 'configure', target: 'edit-asset', title: 'Ajustá un asset', text: 'Hacé clic en el lápiz para abrir la configuración individual.', click: true },
-      { screen: 'configure', target: 'drawer-custom-vpnRequired', title: 'Definí una excepción', text: 'Marcá “Set custom value” y elegí el valor propio de este asset.', click: true },
-      { screen: 'configure', target: 'drawer-save', title: 'Guardá la excepción', text: 'Hacé clic en “Save changes”. En la tabla vas a ver “Custom override”.', click: true },
-      { screen: 'configure', target: 'continue', title: 'Pasá a la revisión', text: 'Hacé clic en “Continue”.', click: true },
-      { screen: 'review', target: 'review-custom', title: 'Revisá las excepciones', text: 'Acá ves qué assets tienen configuración propia. “Edit asset” abre el mismo panel sin salir de la revisión.' },
+      { screen: 'configure', target: 'drawer-custom-vpnRequired', title: 'Definí una excepción', text: 'Marcá “Valor personalizado” y elegí el valor propio de este asset.', click: true },
+      { screen: 'configure', target: 'drawer-save', title: 'Guardá la excepción', text: 'Hacé clic en “Guardar cambios”. En la tabla vas a ver “Valor personalizado”.', click: true },
+      { screen: 'configure', target: 'continue', title: 'Pasá a la revisión', text: 'Hacé clic en “Continuar”.', click: true },
+      { screen: 'review', target: 'review-custom', title: 'Revisá las excepciones', text: 'Acá ves qué assets tienen configuración propia. “Editar asset” abre el mismo panel sin salir de la revisión.' },
     ],
   },
 }
+
+const GUIDES_EN: typeof GUIDES_ES = {
+  create: {
+    title: 'How to create an exercise',
+    intro: 'An exercise groups related assets under one configuration. It takes 4 stages:',
+    steps: [
+      { screen: 'list', target: 'create-exercise', title: 'Create the exercise', text: 'Click “Create exercise” to open the guided flow.', click: true },
+      { screen: 'details', target: 'exercise-name', title: 'Name it', text: 'Use a name your team will recognize, for example “Q4 Commerce Security Assessment”.' },
+      { screen: 'details', target: 'objective', title: 'Describe the goal', text: 'Explain what you want to assess. You have up to 400 characters.' },
+      { screen: 'details', target: 'depth-options', title: 'Pick the depth', text: 'Choose Basic, Standard or Comprehensive. It applies to every asset in the exercise.' },
+      { screen: 'details', target: 'start-date', title: 'Set the dates', text: 'Pick the start date, then the end date. Below you can adjust the time window.' },
+      { screen: 'details', target: 'recurrence', title: 'Recurrence', text: 'Say whether the exercise repeats or runs once.' },
+      { screen: 'details', target: 'validation-toggle', title: 'Human validation', text: 'It starts off. Turn it on if you want an expert to validate the automated findings.' },
+      { screen: 'details', target: 'continue', title: 'Go to assets', text: 'Click “Continue” to select the assets.', click: true },
+      { screen: 'assets', target: 'filter', title: 'Filter the inventory', text: 'Use “Filter” to narrow by type, environment or status. You can also search by name.' },
+      { screen: 'assets', target: 'asset-row', title: 'Select an asset', text: 'Click the row to add it to the exercise. Repeat for every asset you need.', click: true },
+      { screen: 'assets', target: 'selection-count', title: 'Check your count', text: 'The counter shows how many assets are in the exercise.' },
+      { screen: 'assets', target: 'continue', title: 'Configure the assets', text: 'Click “Continue” to move on to configuration.', click: true },
+      { screen: 'configure', target: 'continue', title: 'Configuration', text: 'Assets already inherit the exercise settings. If nothing needs to change, click “Continue”.', click: true },
+      { screen: 'review', target: 'readiness', title: 'Review before creating', text: 'This panel tells you if anything is missing. To change something, use “Edit” on the section and you come straight back here.' },
+      { screen: 'review', target: 'continue', title: 'Create the exercise', text: 'Click “Create exercise”. This does not start testing yet.', click: true },
+    ],
+  },
+  apply: {
+    title: 'How to apply settings to assets',
+    intro: 'Assets inherit the exercise settings. You can change them in bulk or one asset at a time:',
+    steps: [
+      { screen: 'configure', target: 'select-all', title: 'Select the assets', text: 'Tick the box to select them all (or tick row by row).', click: true },
+      { screen: 'configure', target: 'add-setting', title: 'Open bulk edit', text: 'Click “Add setting” to change a value on every selected asset.', click: true },
+      { screen: 'configure', target: 'bulk-mode-rateLimit', title: 'Choose what changes', text: 'Under “Rate limit” pick “Apply new” and choose the value. Anything left on “Keep current” stays as it is.' },
+      { screen: 'configure', target: 'bulk-save', title: 'Save', text: 'Click “Save changes”.', click: true },
+      { screen: 'configure', target: 'confirm-save', title: 'Confirm the impact', text: 'Check which fields and how many assets change, then confirm.', click: true },
+      { screen: 'configure', target: 'edit-asset', title: 'Adjust one asset', text: 'Click the pencil to open that asset’s own settings.', click: true },
+      { screen: 'configure', target: 'drawer-custom-vpnRequired', title: 'Set an exception', text: 'Tick “Set custom value” and choose this asset’s own value.', click: true },
+      { screen: 'configure', target: 'drawer-save', title: 'Save the exception', text: 'Click “Save changes”. The table will show “Custom override”.', click: true },
+      { screen: 'configure', target: 'continue', title: 'Go to review', text: 'Click “Continue”.', click: true },
+      { screen: 'review', target: 'review-custom', title: 'Check the exceptions', text: 'Here you see which assets have their own settings. “Edit asset” opens the same panel without leaving the review.' },
+    ],
+  },
+}
+
+/** Guides in the current language. Both versions have the same steps, so indexes are stable across a switch. */
+export const guides = () => (getLang() === 'es' ? GUIDES_ES : GUIDES_EN)
 
 const STEP_INDEX: Partial<Record<Screen, number>> = { details: 0, assets: 1, configure: 2, review: 3 }
 
@@ -170,8 +215,8 @@ export function TourOverlay({ step, index, total, onNext, onPrev, onClose, onTar
       )}
       <div ref={cardRef} className="tour-card absolute pointer-events-auto bg-white shadow-[0_18px_48px_rgba(0,0,0,.28)] fade-up" style={{ top, left, width: W }} role="dialog" aria-label={step.title}>
         <div className="flex items-center justify-between px-[14px] pt-[12px]">
-          <span className="text-[9px] uppercase tracking-[0.6px] text-[#2b9ea2] font-bold">Paso {index + 1} de {total}</span>
-          <button onClick={onClose} aria-label="Cerrar tour" className="text-[#73787a] hover:text-ink"><X size={15} /></button>
+          <span className="text-[9px] uppercase tracking-[0.6px] text-[#2b9ea2] font-bold">{t(`Step ${index + 1} of ${total}`, `Paso ${index + 1} de ${total}`)}</span>
+          <button onClick={onClose} aria-label={t('Close tour', 'Cerrar tour')} className="text-[#73787a] hover:text-ink"><X size={15} /></button>
         </div>
         <div className="h-[3px] mx-[14px] mt-[8px] bg-[#eef0f0]">
           <div className="h-full bg-brand transition-all duration-300" style={{ width: `${((index + 1) / total) * 100}%` }} />
@@ -180,16 +225,16 @@ export function TourOverlay({ step, index, total, onNext, onPrev, onClose, onTar
           <p className="text-[13px] font-semibold">{step.title}</p>
           <p className="mt-[4px] text-[11px] leading-[16px] text-[#505557]">{step.text}</p>
           {step.click && rect && (
-            <p className="mt-[8px] flex items-center gap-[5px] text-[10px] font-semibold text-[#17575a]"><MousePointerClick size={12} />Hacé clic en lo resaltado para seguir</p>
+            <p className="mt-[8px] flex items-center gap-[5px] text-[10px] font-semibold text-[#17575a]"><MousePointerClick size={12} />{t('Click the highlighted control to continue', 'Hacé clic en lo resaltado para seguir')}</p>
           )}
           {!rect && (
-            <p className="mt-[8px] text-[10px] text-[#a0631a]">Este elemento no está visible ahora. Volvé un paso atrás para hacerlo aparecer.</p>
+            <p className="mt-[8px] text-[10px] text-[#a0631a]">{t('This element is not visible right now. Go back a step to bring it up.', 'Este elemento no está visible ahora. Volvé un paso atrás para hacerlo aparecer.')}</p>
           )}
         </div>
         <div className="flex items-center justify-between px-[10px] py-[8px] bg-[#f7f7f7]">
-          <button onClick={onPrev} disabled={index === 0} className="h-[28px] px-[10px] text-[10px] font-bold uppercase tracking-[0.3px] disabled:opacity-30">Atrás</button>
+          <button onClick={onPrev} disabled={index === 0} className="h-[28px] px-[10px] text-[10px] font-bold uppercase tracking-[0.3px] disabled:opacity-30">{t('Back', 'Atrás')}</button>
           <button onClick={onNext} className="inline-flex items-center gap-[6px] h-[28px] px-[12px] bg-brand border border-brand-border text-[10px] font-bold uppercase tracking-[0.3px]">
-            {index + 1 === total ? 'Terminar' : 'Siguiente'} <ArrowRight size={13} />
+            {index + 1 === total ? t('Finish', 'Terminar') : t('Next', 'Siguiente')} <ArrowRight size={13} />
           </button>
         </div>
       </div>
@@ -201,23 +246,28 @@ export function TourOverlay({ step, index, total, onNext, onPrev, onClose, onTar
 /* Chat                                                                */
 /* ------------------------------------------------------------------ */
 
-type MsgBody = { from: 'user' | 'bot'; text: string } | { from: 'bot'; guide: GuideId }
+// Bot lines are functions so they follow the language switch; user lines stay as typed.
+type MsgBody = { from: 'user'; text: string } | { from: 'bot'; say: () => string } | { from: 'bot'; guide: GuideId }
 type Msg = MsgBody & { id: number }
 
-const QUICK = ['¿Cómo creo un ejercicio?', '¿Cómo aplico la configuración a los assets?', '¿En qué paso estoy?']
+const quick = () => [
+  t('How do I create an exercise?', '¿Cómo creo un ejercicio?'),
+  t('How do I apply settings to assets?', '¿Cómo aplico la configuración a los assets?'),
+  t('Which step am I on?', '¿En qué paso estoy?'),
+]
 
 function intent(text: string): 'create' | 'apply' | 'where' | 'filters' | 'hello' | 'unknown' {
-  const t = text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-  if (/(donde|paso|estoy|ubic)/.test(t)) return 'where'
-  if (/(asset|activo|aplic|masiv|bulk|config|override|excepci)/.test(t)) return 'apply'
-  if (/(crea|nuevo|ejercicio|empez)/.test(t)) return 'create'
-  if (/(filtr|busc|tabla)/.test(t)) return 'filters'
-  if (/(hola|buen|hey|hi)/.test(t)) return 'hello'
+  const q = text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  if (/(donde|paso|estoy|ubic|where|which step|am i)/.test(q)) return 'where'
+  if (/(asset|activo|aplic|apply|masiv|bulk|config|setting|override|excepci|exception)/.test(q)) return 'apply'
+  if (/(crea|nuevo|ejercicio|empez|new|exercise|start)/.test(q)) return 'create'
+  if (/(filt|busc|search|tabla|table)/.test(q)) return 'filters'
+  if (/(hola|buen|hey|hi\b|hello)/.test(q)) return 'hello'
   return 'unknown'
 }
 
 function GuideCard({ guide, screen, tourIndex, onStart, onJump }: { guide: GuideId; screen: Screen; tourIndex: number | null; onStart: () => void; onJump: (i: number) => void }) {
-  const g = GUIDES[guide]
+  const g = guides()[guide]
   const here = g.steps.findIndex(s => s.screen === screen)
   return (
     <div className="bg-white border border-[#e5e5e5] w-full">
@@ -238,7 +288,7 @@ function GuideCard({ guide, screen, tourIndex, onStart, onJump }: { guide: Guide
                 <span className={cx('grid place-items-center size-[16px] shrink-0 text-[8px] font-bold mt-[1px]', active || isHere ? 'bg-ink text-white' : 'bg-[#eef0f0] text-[#505557]')}>{i + 1}</span>
                 <span className="text-[10.5px] leading-[15px]">
                   {s.title}
-                  {(active || (isHere && i === here)) && <span className="ml-[6px] inline-flex items-center gap-[2px] text-[9px] font-bold text-[#17575a]"><MapPin size={9} />{active ? 'en curso' : 'estás acá'}</span>}
+                  {(active || (isHere && i === here)) && <span className="ml-[6px] inline-flex items-center gap-[2px] text-[9px] font-bold text-[#17575a]"><MapPin size={9} />{active ? t('in progress', 'en curso') : t('you are here', 'estás acá')}</span>}
                 </span>
               </button>
             </li>
@@ -246,7 +296,7 @@ function GuideCard({ guide, screen, tourIndex, onStart, onJump }: { guide: Guide
         })}
       </ol>
       <button onClick={onStart} className="w-full h-[34px] flex items-center justify-center gap-[6px] bg-ink text-white text-[10px] font-bold uppercase tracking-[0.4px] hover:bg-[#24282a]">
-        {here >= 0 ? 'Mostrarme desde donde estoy' : 'Iniciar tour'} <ArrowRight size={13} />
+        {here >= 0 ? t('Show me from where I am', 'Mostrarme desde donde estoy') : t('Start tour', 'Iniciar tour')} <ArrowRight size={13} />
       </button>
     </div>
   )
@@ -261,7 +311,7 @@ export function Assistant({
 }) {
   const idRef = useRef(1)
   const [msgs, setMsgs] = useState<Msg[]>(() => [
-    { id: 0, from: 'bot', text: '¡Hola Sarah! 👋 Soy el asistente de Strike. Te puedo mostrar cómo crear un ejercicio y cómo aplicar su configuración a los assets, marcándote en pantalla cada paso.' },
+    { id: 0, from: 'bot', say: () => t('Hi Sarah! 👋 I’m the Strike assistant. I can show you how to create an exercise and how to apply its settings to the assets, highlighting each step on screen.', '¡Hola Sarah! 👋 Soy el asistente de Strike. Te puedo mostrar cómo crear un ejercicio y cómo aplicar su configuración a los assets, marcándote en pantalla cada paso.') },
   ])
   const [typing, setTyping] = useState(false)
   const [input, setInput] = useState('')
@@ -288,20 +338,26 @@ export function Assistant({
           push({ from: 'bot', guide: kind })
         } else if (kind === 'where') {
           const idx = STEP_INDEX[screen]
+          const left = idx === undefined ? 0 : STEPS.length - idx - 1
           push({
             from: 'bot',
-            text:
+            say: () =>
               idx === undefined
-                ? `Estás en: ${SCREEN_LABEL[screen]}. ${screen === 'list' ? 'Desde acá podés crear un ejercicio nuevo.' : 'Volvé al listado para ver tu ejercicio.'}`
-                : `Estás en ${SCREEN_LABEL[screen]}. Te ${STEPS.length - idx - 1 === 1 ? 'queda 1 etapa' : `quedan ${STEPS.length - idx - 1} etapas`} para terminar. ¿Querés que te marque en pantalla qué hacer acá?`,
+                ? screen === 'list'
+                  ? t(`You are on: ${screenLabel(screen)}. From here you can create a new exercise.`, `Estás en: ${screenLabel(screen)}. Desde acá podés crear un ejercicio nuevo.`)
+                  : t(`You are on: ${screenLabel(screen)}. Go back to the list to see your exercise.`, `Estás en: ${screenLabel(screen)}. Volvé al listado para ver tu ejercicio.`)
+                : t(
+                    `You are on ${screenLabel(screen)}. ${left === 1 ? '1 stage' : `${left} stages`} left. Want me to highlight what to do here?`,
+                    `Estás en ${screenLabel(screen)}. Te ${left === 1 ? 'queda 1 etapa' : `quedan ${left} etapas`} para terminar. ¿Querés que te marque en pantalla qué hacer acá?`,
+                  ),
           })
           if (idx !== undefined) push({ from: 'bot', guide: screen === 'configure' ? 'apply' : 'create' })
         } else if (kind === 'filters') {
-          push({ from: 'bot', text: 'Todas las tablas tienen búsqueda y el botón “Filter”: combiná filtros por columna (tipo, entorno, estado, configuración). Los filtros activos aparecen como chips y los podés quitar de a uno.' })
+          push({ from: 'bot', say: () => t('Every table has search and a “Filter” button: combine filters by column (type, environment, status, configuration). Active filters show up as chips you can remove one by one.', 'Todas las tablas tienen búsqueda y el botón “Filtrar”: combiná filtros por columna (tipo, entorno, estado, configuración). Los filtros activos aparecen como chips y los podés quitar de a uno.') })
         } else if (kind === 'hello') {
-          push({ from: 'bot', text: '¡Hola! ¿Querés ver cómo crear un ejercicio o cómo aplicar la configuración a los assets?' })
+          push({ from: 'bot', say: () => t('Hi! Want to see how to create an exercise or how to apply settings to the assets?', '¡Hola! ¿Querés ver cómo crear un ejercicio o cómo aplicar la configuración a los assets?') })
         } else {
-          push({ from: 'bot', text: 'No estoy seguro de haber entendido. Puedo guiarte para crear un ejercicio, aplicar configuración a los assets o decirte en qué paso estás.' })
+          push({ from: 'bot', say: () => t('I’m not sure I understood. I can guide you to create an exercise, apply settings to assets, or tell you which step you are on.', 'No estoy seguro de haber entendido. Puedo guiarte para crear un ejercicio, aplicar configuración a los assets o decirte en qué paso estás.') })
         }
       }, 650)
     },
@@ -309,14 +365,14 @@ export function Assistant({
   )
 
   const send = () => {
-    const t = input.trim()
-    if (!t) return
+    const text = input.trim()
+    if (!text) return
     setInput('')
-    reply(t)
+    reply(text)
   }
 
   const startFromHere = (guide: GuideId) => {
-    const here = GUIDES[guide].steps.findIndex(s => s.screen === screen)
+    const here = guides()[guide].steps.findIndex(s => s.screen === screen)
     onStartTour(guide, Math.max(0, here))
   }
 
@@ -326,22 +382,23 @@ export function Assistant({
     <>
 
       {open && (
-        <div role="dialog" aria-label="Asistente de Strike" className="fade-up fixed z-50 bottom-[72px] left-[12px] md:left-[112px] w-[min(360px,calc(100vw-24px))] h-[540px] max-h-[calc(100dvh-140px)] flex flex-col bg-[#fafafa] shadow-[0_24px_64px_rgba(17,19,21,.28)] border border-[#e5e5e5]">
+        <div className="fixed z-50 inset-x-[12px] bottom-[12px] sm:inset-x-auto sm:bottom-auto sm:right-[84px] sm:top-1/2 sm:-translate-y-1/2">
+        <div role="dialog" aria-label={t('Strike assistant', 'Asistente de Strike')} className="chat-pop w-full sm:w-[360px] h-[540px] max-h-[calc(100dvh-96px)] sm:max-h-[calc(100dvh-32px)] flex flex-col bg-[#fafafa] shadow-[0_24px_64px_rgba(17,19,21,.28)] border border-[#e5e5e5] rounded-[14px] overflow-hidden">
           <div className="flex items-center gap-[10px] px-[14px] h-[54px] bg-[#111315] text-white shrink-0">
             <span className="grid place-items-center size-[30px] bg-brand text-ink"><Bot size={17} /></span>
             <div className="flex-1">
               <p className="text-[12px] font-semibold">Strike Assistant</p>
-              <p className="text-[10px] text-[#9fe9eb]">Te guío paso a paso</p>
+              <p className="text-[10px] text-[#9fe9eb]">{t('I’ll guide you step by step', 'Te guío paso a paso')}</p>
             </div>
-            <button onClick={() => setOpen(false)} aria-label="Cerrar" className="text-[#c9cccd] hover:text-white"><X size={16} /></button>
+            <button onClick={() => setOpen(false)} aria-label={t('Close', 'Cerrar')} className="text-[#c9cccd] hover:text-white"><X size={16} /></button>
           </div>
 
           <div className="px-[14px] py-[9px] bg-white border-b border-[#ececec] shrink-0">
-            <p className="flex items-center gap-[5px] text-[9px] uppercase tracking-[0.5px] text-[#73787a]"><MapPin size={10} className="text-[#2b9ea2]" />Estás en</p>
-            <p className="mt-[2px] text-[11px] font-semibold">{SCREEN_LABEL[screen]}</p>
+            <p className="flex items-center gap-[5px] text-[9px] uppercase tracking-[0.5px] text-[#73787a]"><MapPin size={10} className="text-[#2b9ea2]" />{t('You are on', 'Estás en')}</p>
+            <p className="mt-[2px] text-[11px] font-semibold">{screenLabel(screen)}</p>
             <div className="mt-[6px] flex gap-[3px]">
               {STEPS.map((s, i) => (
-                <span key={s} title={s} className={cx('h-[4px] flex-1 transition-colors duration-300', stepIdx === undefined ? (screen === 'created' ? 'bg-brand-dark' : 'bg-[#e5e7e7]') : i < stepIdx ? 'bg-brand-dark' : i === stepIdx ? 'bg-brand' : 'bg-[#e5e7e7]')} />
+                <span key={s} title={tv(s)} className={cx('h-[4px] flex-1 transition-colors duration-300', stepIdx === undefined ? (screen === 'created' ? 'bg-brand-dark' : 'bg-[#e5e7e7]') : i < stepIdx ? 'bg-brand-dark' : i === stepIdx ? 'bg-brand' : 'bg-[#e5e7e7]')} />
               ))}
             </div>
           </div>
@@ -360,43 +417,96 @@ export function Assistant({
                 </div>
               ) : (
                 <div key={m.id} className={cx('fade-up max-w-[85%] px-[11px] py-[8px] text-[11px] leading-[16px]', m.from === 'user' ? 'self-end bg-ink text-white' : 'self-start bg-white border border-[#e5e5e5]')}>
-                  {m.text}
+                  {'say' in m ? m.say() : m.text}
                 </div>
               ),
             )}
             {typing && (
-              <div className="self-start px-[11px] py-[9px] bg-white border border-[#e5e5e5] typing text-[14px] leading-[8px]" aria-label="Escribiendo">
+              <div className="self-start px-[11px] py-[9px] bg-white border border-[#e5e5e5] typing text-[14px] leading-[8px]" aria-label={t('Typing', 'Escribiendo')}>
                 <span>•</span><span>•</span><span>•</span>
               </div>
             )}
           </div>
 
           <div className="px-[10px] pt-[8px] flex gap-[5px] overflow-x-auto shrink-0 [scrollbar-width:none]">
-            {QUICK.map(q => (
+            {quick().map(q => (
               <button key={q} onClick={() => reply(q)} className="shrink-0 h-[24px] px-[9px] bg-white border border-[#bde7e9] text-[10px] text-[#17575a] hover:bg-brand-soft whitespace-nowrap">{q}</button>
             ))}
           </div>
           <form onSubmit={e => { e.preventDefault(); send() }} className="flex items-center gap-[6px] m-[10px] h-[38px] px-[10px] bg-white border border-[#dcdcdc] focus-within:border-[#2bb9bd] shrink-0">
-            <input value={input} onChange={e => setInput(e.target.value)} placeholder="Escribí tu pregunta…" className="flex-1 bg-transparent outline-none text-[11px]" />
-            <button type="submit" aria-label="Enviar" disabled={!input.trim()} className="grid place-items-center size-[26px] bg-brand disabled:opacity-40"><Send size={13} /></button>
+            <input value={input} onChange={e => setInput(e.target.value)} placeholder={t('Type your question…', 'Escribí tu pregunta…')} className="flex-1 bg-transparent outline-none text-[11px]" />
+            <button type="submit" aria-label={t('Send', 'Enviar')} disabled={!input.trim()} className="grid place-items-center size-[26px] bg-brand disabled:opacity-40"><Send size={13} /></button>
           </form>
+        </div>
         </div>
       )}
     </>
   )
 }
 
-/** Launcher that sits in the page flow under the content, as in the design. */
-export function AssistantLauncher({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+/** Robot face for the launcher: blinks, and its antenna light pulses. */
+function BotFace() {
   return (
-    <div className="self-start">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#111315" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 3.5v3" />
+      <circle className="bot-antenna" cx="12" cy="3" r="1.3" fill="#111315" stroke="none" />
+      <rect x="4.5" y="7" width="15" height="11.5" rx="3" />
+      <path d="M2.5 11.5v3M21.5 11.5v3" />
+      <rect className="bot-eye" x="8.4" y="10.6" width="2" height="3" rx="1" fill="#111315" stroke="none" />
+      <rect className="bot-eye" x="13.6" y="10.6" width="2" height="3" rx="1" fill="#111315" stroke="none" />
+      <path d="M10 16h4" />
+    </svg>
+  )
+}
+
+const INTERACTIVE = 'button, a, input, select, textarea, label, [role="checkbox"], [role="switch"], [role="radio"]'
+
+/**
+ * Floating launcher, docked on the right at mid-height. When a control of the page (Continue,
+ * a row's edit pencil…) passes underneath it, it slides to the nearest free spot so it never
+ * covers an action. It steps aside entirely while a guided tour is running.
+ */
+export function AssistantLauncher({ open, onToggle, hidden }: { open: boolean; onToggle: () => void; hidden?: boolean }) {
+  const [shift, setShift] = useState(0)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    let raf = 0
+    const size = 52
+    const blocked = (offset: number) => {
+      const cx = window.innerWidth - 16 - size / 2
+      const cy = window.innerHeight / 2 + offset
+      const pts: [number, number][] = [[cx, cy], [cx - 20, cy - 20], [cx + 20, cy - 20], [cx - 20, cy + 20], [cx + 20, cy + 20], [cx - 30, cy], [cx, cy - 30], [cx, cy + 30], [cx - 30, cy - 14], [cx - 30, cy + 14]]
+      return pts.some(([x, y]) =>
+        document.elementsFromPoint(x, y).some(el => !ref.current?.contains(el) && !!el.closest(INTERACTIVE) && !el.closest('[role="dialog"]')),
+      )
+    }
+    const check = () => {
+      raf = 0
+      const limit = window.innerHeight / 2 - size
+      for (let step = 0; step * 30 <= limit; step++) {
+        for (const off of step ? [-step * 30, step * 30] : [0]) {
+          if (!blocked(off)) { setShift(off); return }
+        }
+      }
+    }
+    const queue = () => { if (!raf) raf = requestAnimationFrame(check) }
+    queue()
+    window.addEventListener('scroll', queue, { passive: true })
+    window.addEventListener('resize', queue)
+    const iv = window.setInterval(queue, 400)
+    return () => { window.removeEventListener('scroll', queue); window.removeEventListener('resize', queue); window.clearInterval(iv); cancelAnimationFrame(raf) }
+  }, [])
+
+  return (
+    <div ref={ref} className={cx('fixed z-50 right-[16px] top-1/2 transition-[transform,opacity] duration-300 ease-out', hidden && 'opacity-0 pointer-events-none')} style={{ transform: `translateY(calc(-50% + ${shift}px))${hidden ? ' scale(.6)' : ''}` }}>
       <button
         data-tour="assistant"
         onClick={onToggle}
-        aria-label={open ? 'Cerrar asistente' : 'Abrir asistente'}
-        className="grid place-items-center w-[44px] h-[48px] bg-brand hover:bg-[#6edadd] transition-colors"
+        aria-label={open ? t('Close assistant', 'Cerrar asistente') : t('Open assistant', 'Abrir asistente')}
+        className={cx('bot-launcher relative grid place-items-center size-[52px] rounded-full bg-brand shadow-[0_10px_28px_rgba(17,19,21,.22)] transition-colors hover:bg-[#6edadd]', !open && 'is-floating')}
       >
-        {open ? <X size={20} /> : <Bot size={20} strokeWidth={1.75} />}
+        <span className="bot-ping absolute inset-0 rounded-full" />
+        <span key={open ? 'x' : 'bot'} className="bot-swap grid place-items-center">{open ? <X size={22} /> : <BotFace />}</span>
       </button>
     </div>
   )

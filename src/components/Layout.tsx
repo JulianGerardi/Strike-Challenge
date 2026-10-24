@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Box, ChartNoAxesColumnIncreasing, ChevronDown, ClipboardCheck, LayoutGrid, Settings } from 'lucide-react'
 import { cx } from './ui'
+import { t, type Lang } from '../i18n'
 
 export function StrikeLogo({ size = 21, color = '#fff' }: { size?: number; color?: string }) {
   // Pixel "S" mark, traced from the brand asset
@@ -16,11 +17,11 @@ export function StrikeLogo({ size = 21, color = '#fff' }: { size?: number; color
 }
 
 const NAV = [
-  { icon: LayoutGrid, label: 'Dashboard' },
-  { icon: Box, label: 'Assets' },
-  { icon: ClipboardCheck, label: 'Security exercises' },
-  { icon: ChartNoAxesColumnIncreasing, label: 'Reports' },
-  { icon: Settings, label: 'Settings' },
+  { icon: LayoutGrid, label: () => 'Dashboard' },
+  { icon: Box, label: () => 'Assets' },
+  { icon: ClipboardCheck, label: () => t('Security exercises', 'Ejercicios de seguridad') },
+  { icon: ChartNoAxesColumnIncreasing, label: () => t('Reports', 'Reportes') },
+  { icon: Settings, label: () => t('Settings', 'Configuración') },
 ]
 
 export function Sidebar({ onHome }: { onHome: () => void }) {
@@ -33,8 +34,8 @@ export function Sidebar({ onHome }: { onHome: () => void }) {
       <nav className="flex flex-col gap-[5px]">
         {NAV.map(({ icon: Icon, label }, i) => (
           <button
-            key={label}
-            title={label}
+            key={i}
+            title={label()}
             onClick={i === 2 ? onHome : undefined}
             className={cx('flex items-center justify-center h-[46px] w-[54px] border-l-2 transition-colors', i === 2 ? 'bg-[#242729] border-brand text-brand' : 'border-transparent text-[#c9cccd] hover:bg-[#1b1e20]')}
           >
@@ -59,7 +60,7 @@ export function Smiley({ happy, intro, onClick }: { happy?: boolean; intro?: boo
     <button
       data-tour="smiley"
       onClick={onClick}
-      aria-label="Abrir asistente"
+      aria-label={t('Open assistant', 'Abrir asistente')}
       className={cx('smiley grid place-items-center h-[28px] w-[33px] bg-brand', happy && 'is-happy', intro && 'is-intro')}
     >
       <svg className="smiley-face" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111315" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -87,20 +88,38 @@ function useIntro(key: unknown, ms = 2200) {
   return on
 }
 
-export function Header({ happy, onSmiley, introKey }: { happy?: boolean; onSmiley?: () => void; introKey?: unknown }) {
-  const intro = useIntro(introKey)
+/** EN / ES switch shown in the header. */
+function LangSwitch({ lang, onChange }: { lang: Lang; onChange: (l: Lang) => void }) {
+  return (
+    <div role="radiogroup" aria-label={t('Language', 'Idioma')} className="relative grid grid-cols-2 h-[28px] p-[2px] bg-[#f0f1f1] font-fono text-[10px] font-medium tracking-[0.3px]">
+      <span className="absolute top-[2px] bottom-[2px] left-[2px] w-[calc(50%-2px)] bg-brand transition-transform duration-300 ease-[cubic-bezier(.3,1.3,.5,1)]" style={{ transform: lang === 'es' ? 'translateX(100%)' : 'none' }} />
+      {(['en', 'es'] as const).map(l => (
+        <button key={l} role="radio" aria-checked={lang === l} onClick={() => onChange(l)} className={cx('relative z-10 w-[32px] uppercase transition-colors', lang === l ? 'text-ink' : 'text-[#73787a] hover:text-ink')}>
+          {l}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+export function Header({ happy, onSmiley, introKey, lang, onLang }: { happy?: boolean; onSmiley?: () => void; introKey?: unknown; lang: Lang; onLang: (l: Lang) => void }) {
+  const intro = useIntro(`${introKey}-${lang}`)
+  const greeting = t('Hi, Sarah!', '¡Hola, Sarah!')
   return (
     <header className="sticky top-0 z-20 h-[48px] flex items-center justify-between px-[16px] md:px-[18px] bg-white/90 backdrop-blur-[10px]">
       <div className="flex items-center gap-[8px] md:gap-[5px]">
         <span className="md:hidden grid place-items-center size-[32px] bg-[#111315]"><StrikeLogo size={16} /></span>
         <Smiley happy={happy} intro={intro} onClick={onSmiley} />
-        <span key={String(introKey)} className="greet font-fono font-medium text-[14px] leading-[20px] text-[#09090b] whitespace-nowrap">Hola! Sarah</span>
+        <span key={`${introKey}-${lang}`} className="greet font-fono font-medium text-[14px] leading-[20px] text-[#09090b] whitespace-nowrap" style={{ animationTimingFunction: `steps(${greeting.length})` }}>{greeting}</span>
       </div>
+      <div className="flex items-center gap-[12px] sm:gap-[18px]">
+      <LangSwitch lang={lang} onChange={onLang} />
       <button className="flex items-center gap-[8px] h-[36px]">
         <span className="grid place-items-center size-[24px] bg-brand text-[9px] font-bold text-[#142f31]">JA</span>
         <span className="hidden sm:inline text-[14px] font-medium tracking-[-0.2px] text-ink">Jordan Avery</span>
         <ChevronDown size={13} className="text-[#73787a]" />
       </button>
+      </div>
     </header>
   )
 }
@@ -109,8 +128,8 @@ export function Shell({ children, header }: { children: ReactNode; header: React
   return (
     <div className="flex-1 min-w-0 flex flex-col">
       {header}
-      <main className="flex-1 px-[16px] md:px-[40px] pt-[17px] pb-[24px]">
-        <div className="max-w-[1028px] mx-auto flex flex-col gap-[18px]">{children}</div>
+      <main className="flex-1 px-[16px] md:px-[32px] xl:px-[40px] pt-[17px] pb-[24px]">
+        <div className="w-full max-w-[1600px] mx-auto flex flex-col gap-[18px]">{children}</div>
       </main>
     </div>
   )
