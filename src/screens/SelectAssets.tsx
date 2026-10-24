@@ -53,10 +53,10 @@ export function SelectAssets({ selected, setSelected, showErrors }: { selected: 
             </tr>
           </thead>
           <tbody>
-            {rows.map(a => {
+            {rows.map((a, i) => {
               const on = selected.includes(a.id)
               return (
-                <tr key={a.id} onClick={() => toggle(a.id)} className={cx('h-[51px] cursor-pointer transition-colors', on ? 'bg-[#eefcfc]' : 'hover:bg-[#fafafa]')}>
+                <tr key={a.id} data-tour={i === 0 ? 'asset-row' : undefined} onClick={() => toggle(a.id)} className={cx('h-[51px] cursor-pointer transition-colors', on ? 'bg-[#eefcfc]' : 'hover:bg-[#fafafa]')}>
                   <Td><Checkbox checked={on} onChange={() => toggle(a.id)} /></Td>
                   <Td>
                     <div className="flex items-center gap-[9px]">

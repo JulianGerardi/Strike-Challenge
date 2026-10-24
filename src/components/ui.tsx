@@ -101,32 +101,50 @@ export function PageHeader({ title, caption, action }: { title: string; caption:
 
 export const STEPS = ['Exercise details', 'Select assets', 'Configure', 'Review']
 
-export function Stepper({ active, onGo }: { active: number; onGo?: (i: number) => void }) {
+export function Stepper({ active, onGo, editing }: { active: number; onGo?: (i: number) => void; editing?: boolean }) {
   return (
     <div data-tour="stepper" className="flex items-center justify-center w-full h-[60px]">
       <div className="flex items-center w-[850px] max-w-full">
         {STEPS.map((label, i) => {
-          const done = i < active
+          // While editing from Review every other step is already complete.
+          const done = i !== active && (i < active || !!editing)
           const current = i === active
+          const state = done ? 'done' : current ? 'current' : 'pending'
           return (
             <div key={label} className={cx('flex items-center', i < STEPS.length - 1 && 'flex-1')}>
               <button
                 disabled={!done}
                 onClick={() => onGo?.(i)}
-                className="flex items-center gap-[8px] py-[10px] disabled:cursor-default"
+                className="group flex items-center gap-[8px] py-[10px] disabled:cursor-default"
                 aria-current={current ? 'step' : undefined}
               >
-                {done ? (
-                  <span className="grid place-items-center size-[22px] bg-brand-dark border border-brand-dark">
-                    <Check size={13} strokeWidth={2} className="text-white" />
-                  </span>
-                ) : (
-                  <span className={cx('grid place-items-center size-[22px] text-[9px] font-medium tracking-[0.4px]', current ? 'bg-brand text-[#102c2e]' : 'bg-white text-[#686d6f]')}>{i + 1}</span>
-                )}
-                <span className={cx('text-[10px] leading-[15px] font-medium uppercase tracking-[-0.016px] whitespace-nowrap', done ? 'text-brand-dark' : current ? 'text-ink' : 'text-[#8b9092]')}>{label}</span>
+                {/* key by state so the entry animation replays whenever a step changes state */}
+                <span
+                  key={state}
+                  className={cx(
+                    'step-dot relative grid place-items-center size-[22px] text-[9px] font-medium tracking-[0.4px] transition-colors duration-300',
+                    done && 'step-pop bg-brand-dark border border-brand-dark group-hover:bg-[#1c7279]',
+                    current && 'step-pop step-current bg-brand text-[#102c2e]',
+                    !done && !current && 'bg-white text-[#686d6f]',
+                  )}
+                >
+                  {done ? (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path className="step-check" d="M4 12.5l5 5L20 6.5" />
+                    </svg>
+                  ) : (
+                    i + 1
+                  )}
+                </span>
+                <span className={cx('text-[10px] leading-[15px] font-medium uppercase tracking-[-0.016px] whitespace-nowrap transition-colors duration-500', done ? 'text-brand-dark' : current ? 'text-ink' : 'text-[#8b9092]')}>{label}</span>
               </button>
               {i < STEPS.length - 1 && (
-                <span className={cx('flex-1 h-px mx-[16px] transition-colors duration-500', done ? (i + 1 === active ? 'bg-brand' : 'bg-brand-dark') : 'bg-[#d7d9da]')} />
+                <span className="relative flex-1 h-px mx-[16px] bg-[#d7d9da] overflow-hidden">
+                  <span
+                    className={cx('absolute inset-0 origin-left transition-transform duration-700 ease-[cubic-bezier(.65,0,.35,1)]', i + 1 === active ? 'bg-brand' : 'bg-brand-dark')}
+                    style={{ transform: `scaleX(${i < active || editing ? 1 : 0})` }}
+                  />
+                </span>
               )}
             </div>
           )

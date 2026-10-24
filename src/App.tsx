@@ -37,6 +37,8 @@ export default function App() {
   const [happy, setHappy] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
   const [tour, setTour] = useState<{ guide: GuideId; index: number } | null>(null)
+  // Set when a step is opened to edit something from a later screen; saving returns there.
+  const [returnTo, setReturnTo] = useState<Screen | null>(null)
   const nextId = useRef(2048)
 
   const shared: SharedConfig = useMemo(
@@ -87,7 +89,6 @@ export default function App() {
       if (index < 0) return
       if (index >= steps.length) {
         setTour(null)
-        setChatOpen(true)
         return
       }
       setTour({ ...tour, index })
@@ -95,6 +96,21 @@ export default function App() {
     },
     [tour, screen, go],
   )
+
+  const screenRef = useRef(screen)
+  screenRef.current = screen
+
+  // The user clicked the highlighted control. If that click moved them to another screen, the sync
+  // effect below already picked the right step; otherwise move on to the next step of this screen.
+  const advanceFrom = useCallback((from: number) => {
+    setTour(t => {
+      if (!t || t.index !== from) return t
+      const steps = GUIDES[t.guide].steps
+      const next = steps[from + 1]
+      if (!next) return null
+      return next.screen === screenRef.current ? { ...t, index: from + 1 } : t
+    })
+  }, [])
 
   // Keep the tour in sync when the user moves through the flow on their own.
   useEffect(() => {
@@ -112,17 +128,30 @@ export default function App() {
 
   const stepIndex = ORDER.indexOf(screen)
 
+  // Next screen in the flow, unless the user came here to edit something: then go back to where they were.
+  const finish = (next: Screen) => {
+    const target = returnTo ?? next
+    setReturnTo(null)
+    go(target)
+    if (returnTo) setToast('Cambios guardados')
+  }
+
+  const editFrom = (target: Screen, origin: Screen) => {
+    setReturnTo(r => r ?? origin)
+    go(target)
+  }
+
   const onContinue = () => {
     if (screen === 'details') {
       if (!draft.name.trim() || (draft.startDate && draft.endDate && draft.endDate < draft.startDate)) return setShowErrors(true)
-      return go('assets')
+      return finish('assets')
     }
     if (screen === 'assets') {
       if (!selected.length) return setShowErrors(true)
       setChecked([])
-      return go('configure')
+      return finish('configure')
     }
-    if (screen === 'configure') return go('review')
+    if (screen === 'configure') return finish('review')
     if (screen === 'review') {
       const id = `EX-${nextId.current++}`
       const custom = selected.filter(a => hasOverrides(overrides[a])).length
@@ -137,6 +166,11 @@ export default function App() {
   }
 
   const onBack = () => {
+    if (returnTo) {
+      const r = returnTo
+      setReturnTo(null)
+      return go(r)
+    }
     if (screen === 'details') return go('list')
     go(ORDER[stepIndex - 1])
   }
@@ -146,6 +180,7 @@ export default function App() {
     setSelected([])
     setOverrides(SEED_OVERRIDES)
     setChecked([])
+    setReturnTo(null)
     go('details')
   }
 
@@ -177,11 +212,17 @@ export default function App() {
 
   return (
     <div className="flex min-h-screen min-w-[1100px] bg-[#fafafa]">
-      <Sidebar onHome={() => go('list')} />
+      <Sidebar onHome={() => { setReturnTo(null); go('list') }} />
       <Shell header={<Header happy={happy} onSmiley={() => { setHappy(true); setChatOpen(true) }} />}>
-        {stepIndex >= 0 && <Stepper active={stepIndex} onGo={i => go(ORDER[i])} />}
+        {stepIndex >= 0 && <Stepper active={stepIndex} editing={!!returnTo} onGo={i => { setReturnTo(null); go(ORDER[i]) }} />}
 
         <div key={screen} className="fade-up flex flex-col gap-[18px]">
+          {returnTo && stepIndex >= 0 && (
+            <div className="flex items-center gap-[10px] px-[14px] py-[10px] bg-[#eefafa] border border-[#cbe9ea] text-[11px] text-[#285b5e]">
+              <span className="font-semibold">Editing from {returnTo === 'review' ? 'Review' : 'Configure'}.</span>
+              <span>Save your changes to go straight back. You won't need to repeat the other steps.</span>
+            </div>
+          )}
           {screen === 'list' && <ExercisesList exercises={exercises} onCreate={resetFlow} />}
           {screen === 'details' && <ExerciseDetails draft={draft} setDraft={setDraft} showErrors={showErrors} />}
           {screen === 'assets' && <SelectAssets selected={selected} setSelected={setSelected} showErrors={showErrors} />}
@@ -195,11 +236,11 @@ export default function App() {
               setChecked={setChecked}
               onAddSetting={() => setBulk(freshBulk(shared))}
               onEditAsset={setDrawer}
-              onEditDefaults={() => go('details')}
+              onEditDefaults={() => editFrom('details', 'configure')}
             />
           )}
           {screen === 'review' && (
-            <Review draft={draft} shared={shared} selectedIds={selected} overrides={overrides} onEditStep={i => go(ORDER[i])} onEditAsset={setDrawer} />
+            <Review draft={draft} shared={shared} selectedIds={selected} overrides={overrides} onEditStep={i => editFrom(ORDER[i], 'review')} onEditAsset={setDrawer} />
           )}
           {screen === 'created' && created && <ExerciseCreated id={created.id} draft={draft} assetCount={created.assets} customCount={created.custom} />}
 
@@ -208,9 +249,9 @@ export default function App() {
               <FormFooter
                 tourId="continue"
                 onCancel={onBack}
-                cancelLabel={screen === 'details' ? 'Cancel' : 'Back'}
+                cancelLabel={returnTo || screen === 'details' ? 'Cancel' : 'Back'}
                 onContinue={onContinue}
-                continueLabel={screen === 'review' ? 'Create exercise' : 'Continue'}
+                continueLabel={screen === 'review' ? 'Create exercise' : returnTo === 'review' ? 'Save and return to review' : returnTo ? 'Save and return' : 'Continue'}
               />
             </div>
           )}
@@ -260,6 +301,7 @@ export default function App() {
           onNext={() => moveTour(1)}
           onPrev={() => moveTour(-1)}
           onClose={() => setTour(null)}
+          onTargetClick={() => advanceFrom(tour.index)}
         />
       )}
     </div>

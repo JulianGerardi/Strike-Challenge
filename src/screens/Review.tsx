@@ -4,11 +4,12 @@ import { ASSETS, excludedLabel, formatDate, hasOverrides } from '../data'
 import { AssetMark, Badge, PageHeader, cx } from '../components/ui'
 
 function Section({ title, onEdit, children, tour }: { title: string; onEdit: () => void; children: React.ReactNode; tour?: string }) {
+
   return (
     <section data-tour={tour} className="bg-white">
       <div className="flex items-center justify-between h-[66px] px-[21px] bg-[#effbfb]">
         <h3 className="text-[13px] font-medium">{title}</h3>
-        <button onClick={onEdit} className="text-[10px] font-bold uppercase tracking-[0.3px] underline underline-offset-2 hover:text-[#2b9ea2]">Edit</button>
+        <button data-tour={tour ? `${tour}-edit` : undefined} onClick={onEdit} className="text-[10px] font-bold uppercase tracking-[0.3px] underline underline-offset-2 hover:text-[#2b9ea2]">Edit</button>
       </div>
       <div className="px-[21px] py-[20px]">{children}</div>
     </section>

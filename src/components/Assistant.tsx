@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { ArrowRight, Bot, MapPin, Send, X } from 'lucide-react'
+import { ArrowRight, Bot, MapPin, MousePointerClick, Send, X } from 'lucide-react'
 import { STEPS, cx } from './ui'
 
 export type Screen = 'list' | 'details' | 'assets' | 'configure' | 'review' | 'created'
@@ -15,9 +15,12 @@ export const SCREEN_LABEL: Record<Screen, string> = {
 
 export interface TourStep {
   screen: Screen
+  /** data-tour id of the exact control the user has to use in this step. */
   target: string
   title: string
   text: string
+  /** The step is done when the user clicks the highlighted control. */
+  click?: boolean
 }
 
 export type GuideId = 'create' | 'apply'
@@ -27,32 +30,37 @@ export const GUIDES: Record<GuideId, { title: string; intro: string; steps: Tour
     title: 'Cómo crear un ejercicio',
     intro: 'Un ejercicio agrupa varios assets relacionados bajo una misma configuración. Se crea en 4 etapas:',
     steps: [
-      { screen: 'list', target: 'create-exercise', title: 'Empezá desde el listado', text: 'Presioná “Create exercise” para abrir el flujo guiado.' },
-      { screen: 'details', target: 'stepper', title: 'El stepper te ubica', text: 'Siempre vas a ver en qué etapa estás y cuáles te quedan por completar.' },
-      { screen: 'details', target: 'details', title: 'Nombre y objetivo', text: 'Dale un nombre reconocible y explicá qué querés evaluar.' },
-      { screen: 'details', target: 'depth', title: 'Profundidad de las pruebas', text: 'Elegí Basic, Standard o Comprehensive. Aplica a todo el ejercicio.' },
-      { screen: 'details', target: 'schedule', title: 'Cronograma', text: 'Definí fechas, ventana horaria, recurrencia y zona horaria.' },
-      { screen: 'details', target: 'validation', title: 'Validación humana', text: 'Si lo activás, un especialista valida los hallazgos automáticos.' },
-      { screen: 'details', target: 'continue', title: 'Continuá', text: 'Cuando el formulario esté completo, pasá a seleccionar los assets.' },
-      { screen: 'assets', target: 'filter', title: 'Buscá y filtrá', text: 'Filtrá el inventario por tipo, entorno o estado para encontrar rápido lo que necesitás.' },
-      { screen: 'assets', target: 'assets-table', title: 'Seleccioná los assets', text: 'Marcá todos los assets que forman parte del ejercicio. Podés hacer clic en toda la fila.' },
-      { screen: 'assets', target: 'selection-count', title: 'Cantidad seleccionada', text: 'El contador queda visible para que no pierdas de vista el alcance.' },
-      { screen: 'assets', target: 'continue', title: 'Siguiente etapa', text: 'Continuá para configurar los assets seleccionados.' },
-      { screen: 'review', target: 'readiness', title: 'Revisá y creá', text: 'El panel de readiness te avisa si falta algo antes de crear el ejercicio.' },
-      { screen: 'review', target: 'continue', title: 'Crear el ejercicio', text: 'Si está todo listo, creá el ejercicio. Esto no inicia las pruebas todavía.' },
+      { screen: 'list', target: 'create-exercise', title: 'Creá el ejercicio', text: 'Hacé clic en “Create exercise” para abrir el flujo guiado.', click: true },
+      { screen: 'details', target: 'exercise-name', title: 'Poné un nombre', text: 'Escribí un nombre que tu equipo reconozca, por ejemplo “Q4 Commerce Security Assessment”.' },
+      { screen: 'details', target: 'objective', title: 'Contá el objetivo', text: 'Describí qué querés evaluar. Tenés hasta 400 caracteres.' },
+      { screen: 'details', target: 'depth-options', title: 'Elegí la profundidad', text: 'Seleccioná Basic, Standard o Comprehensive. Aplica a todos los assets del ejercicio.' },
+      { screen: 'details', target: 'start-date', title: 'Definí las fechas', text: 'Elegí la fecha de inicio y luego la de fin. Abajo podés ajustar la ventana horaria.' },
+      { screen: 'details', target: 'recurrence', title: 'Recurrencia', text: 'Indicá si el ejercicio se repite o es una única vez.' },
+      { screen: 'details', target: 'validation-toggle', title: 'Validación humana', text: 'Activalo si querés que un especialista valide los hallazgos automáticos.' },
+      { screen: 'details', target: 'continue', title: 'Pasá a los assets', text: 'Hacé clic en “Continue” para seleccionar los assets.', click: true },
+      { screen: 'assets', target: 'filter', title: 'Filtrá el inventario', text: 'Usá “Filter” para acotar por tipo, entorno o estado. También podés buscar por nombre.' },
+      { screen: 'assets', target: 'asset-row', title: 'Seleccioná un asset', text: 'Hacé clic en la fila para sumarla al ejercicio. Repetí con todos los que necesites.', click: true },
+      { screen: 'assets', target: 'selection-count', title: 'Revisá cuántos llevás', text: 'El contador muestra cuántos assets van en el ejercicio.' },
+      { screen: 'assets', target: 'continue', title: 'Configurá los assets', text: 'Hacé clic en “Continue” para pasar a la configuración.', click: true },
+      { screen: 'configure', target: 'continue', title: 'Configuración', text: 'Los assets ya heredan los valores del ejercicio. Si no necesitás cambios, hacé clic en “Continue”.', click: true },
+      { screen: 'review', target: 'readiness', title: 'Revisá antes de crear', text: 'Este panel te avisa si falta algo. Si necesitás cambiar algo, usá “Edit” en la sección y volvés directo acá.' },
+      { screen: 'review', target: 'continue', title: 'Creá el ejercicio', text: 'Hacé clic en “Create exercise”. Esto no inicia las pruebas todavía.', click: true },
     ],
   },
   apply: {
     title: 'Cómo aplicar la configuración a los assets',
-    intro: 'Los assets heredan la configuración del ejercicio. Vos decidís qué cambiar en bloque y qué excepciones tiene cada uno:',
+    intro: 'Los assets heredan la configuración del ejercicio. Podés cambiarla en bloque o asset por asset:',
     steps: [
-      { screen: 'configure', target: 'defaults', title: 'Valores del ejercicio', text: 'Esta barra muestra lo que heredan todos los assets. Con el lápiz volvés a editarlo.' },
-      { screen: 'configure', target: 'config-table', title: 'Tabla de configuración', text: 'Cada fila muestra el valor efectivo. “Custom override” marca lo que difiere del default.' },
-      { screen: 'configure', target: 'filter', title: 'Encontrá excepciones', text: 'Filtrá por “Custom overrides” o por VPN para revisar diferencias entre assets.' },
-      { screen: 'configure', target: 'add-setting', title: 'Edición masiva', text: 'Seleccioná varios assets en la tabla y usá “Add setting” para cambiarles un parámetro a todos juntos. Antes de guardar vas a ver el impacto.' },
-      { screen: 'configure', target: 'edit-asset', title: 'Ajuste individual', text: 'El lápiz abre el drawer del asset: elegí “Inherit default” o “Set custom value” campo por campo.' },
-      { screen: 'configure', target: 'continue', title: 'Pasá a revisión', text: 'Cuando termines, continuá para revisar todo junto.' },
-      { screen: 'review', target: 'review-custom', title: 'Revisá las excepciones', text: 'Acá ves qué assets tienen configuración propia y podés editarlos antes de crear.' },
+      { screen: 'configure', target: 'select-all', title: 'Seleccioná los assets', text: 'Marcá la casilla para seleccionar todos (o marcá fila por fila).', click: true },
+      { screen: 'configure', target: 'add-setting', title: 'Abrí la edición masiva', text: 'Hacé clic en “Add setting” para cambiar un parámetro en todos los seleccionados.', click: true },
+      { screen: 'configure', target: 'bulk-mode-rateLimit', title: 'Elegí qué cambiar', text: 'En “Rate limit” elegí “Apply new” y seleccioná el valor. Lo que dejes en “Keep current” no se toca.' },
+      { screen: 'configure', target: 'bulk-save', title: 'Guardá', text: 'Hacé clic en “Save changes”.', click: true },
+      { screen: 'configure', target: 'confirm-save', title: 'Confirmá el impacto', text: 'Revisá qué campos y cuántos assets cambian, y confirmá.', click: true },
+      { screen: 'configure', target: 'edit-asset', title: 'Ajustá un asset', text: 'Hacé clic en el lápiz para abrir la configuración individual.', click: true },
+      { screen: 'configure', target: 'drawer-custom-vpnRequired', title: 'Definí una excepción', text: 'Marcá “Set custom value” y elegí el valor propio de este asset.', click: true },
+      { screen: 'configure', target: 'drawer-save', title: 'Guardá la excepción', text: 'Hacé clic en “Save changes”. En la tabla vas a ver “Custom override”.', click: true },
+      { screen: 'configure', target: 'continue', title: 'Pasá a la revisión', text: 'Hacé clic en “Continue”.', click: true },
+      { screen: 'review', target: 'review-custom', title: 'Revisá las excepciones', text: 'Acá ves qué assets tienen configuración propia. “Edit asset” abre el mismo panel sin salir de la revisión.' },
     ],
   },
 }
@@ -68,8 +76,24 @@ function findTarget(name: string): HTMLElement | null {
   return all.find(el => el.getClientRects().length > 0) ?? null
 }
 
-export function TourOverlay({ step, index, total, onNext, onPrev, onClose }: { step: TourStep; index: number; total: number; onNext: () => void; onPrev: () => void; onClose: () => void }) {
+export function TourOverlay({ step, index, total, onNext, onPrev, onClose, onTargetClick }: { step: TourStep; index: number; total: number; onNext: () => void; onPrev: () => void; onClose: () => void; onTargetClick: () => void }) {
   const [rect, setRect] = useState<DOMRect | null>(null)
+  const clickRef = useRef(onTargetClick)
+  clickRef.current = onTargetClick
+
+  // Click steps finish when the user uses the highlighted control itself.
+  useEffect(() => {
+    if (!step.click) return
+    const onDoc = (e: MouseEvent) => {
+      const el = findTarget(step.target)
+      if (!el || !el.contains(e.target as Node)) return
+      // Bind to this step now: by the time the timer fires the overlay may already show the next one.
+      const advance = clickRef.current
+      window.setTimeout(advance, 250)
+    }
+    document.addEventListener('click', onDoc, true)
+    return () => document.removeEventListener('click', onDoc, true)
+  }, [step])
   const cardRef = useRef<HTMLDivElement>(null)
   const [cardH, setCardH] = useState(150)
 
@@ -142,6 +166,12 @@ export function TourOverlay({ step, index, total, onNext, onPrev, onClose }: { s
         <div className="px-[14px] pt-[10px] pb-[12px]">
           <p className="text-[13px] font-semibold">{step.title}</p>
           <p className="mt-[4px] text-[11px] leading-[16px] text-[#505557]">{step.text}</p>
+          {step.click && rect && (
+            <p className="mt-[8px] flex items-center gap-[5px] text-[10px] font-semibold text-[#17575a]"><MousePointerClick size={12} />Hacé clic en lo resaltado para seguir</p>
+          )}
+          {!rect && (
+            <p className="mt-[8px] text-[10px] text-[#a0631a]">Este elemento no está visible ahora. Volvé un paso atrás para hacerlo aparecer.</p>
+          )}
         </div>
         <div className="flex items-center justify-between px-[10px] py-[8px] bg-[#f7f7f7]">
           <button onClick={onPrev} disabled={index === 0} className="h-[28px] px-[10px] text-[10px] font-bold uppercase tracking-[0.3px] disabled:opacity-30">Atrás</button>

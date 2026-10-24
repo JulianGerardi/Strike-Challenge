@@ -94,7 +94,7 @@ export function BulkEditModal({ count, shared, changes, setChanges, onClose, onS
       title="Edit asset settings"
       caption={`Choose only the settings you want to change for ${count} selected ${count === 1 ? 'asset' : 'assets'}.`}
       onClose={onClose}
-      footer={<><Button variant="ghost" className="w-[108px] h-[40px]" onClick={onClose}>Cancel</Button><Button className="h-[40px] px-[16px]" disabled={!dirty} onClick={onSave}>Save changes</Button></>}
+      footer={<><Button variant="ghost" className="w-[108px] h-[40px]" onClick={onClose}>Cancel</Button><Button data-tour="bulk-save" className="h-[40px] px-[16px]" disabled={!dirty} onClick={onSave}>Save changes</Button></>}
     >
       <div className="flex flex-col divide-y divide-[#efefef]">
         {(Object.keys(FIELD_LABEL) as FieldKey[]).map(f => {
@@ -108,7 +108,7 @@ export function BulkEditModal({ count, shared, changes, setChanges, onClose, onS
                   <p className="text-[12px] font-semibold">{FIELD_LABEL[f]}</p>
                   <p className="mt-[6px] text-[9px] text-[#969a9c]">{hint}</p>
                 </div>
-                <Segmented size="sm" value={c.mode} options={['Keep current', 'Apply new', 'Reset'] as const} onChange={m => setChanges({ ...changes, [f]: { ...c, mode: m } })} />
+                <span data-tour={`bulk-mode-${f}`} className="inline-flex"><Segmented size="sm" value={c.mode} options={['Keep current', 'Apply new', 'Reset'] as const} onChange={m => setChanges({ ...changes, [f]: { ...c, mode: m } })} /></span>
               </div>
               {c.mode === 'Apply new' && <div className="fade-up"><FieldEditor field={f} value={c} onChange={v => setChanges({ ...changes, [f]: v })} /></div>}
             </div>
@@ -141,7 +141,7 @@ export function ConfirmBulkModal({ assets, lines, onClose, onSave }: { assets: A
       title="Confirm bulk changes"
       caption={`Review the impact before updating ${assets.length} ${assets.length === 1 ? 'asset' : 'assets'}.`}
       onClose={onClose}
-      footer={<><Button variant="ghost" className="w-[108px] h-[40px]" onClick={onClose}>Cancel</Button><Button className="h-[40px] px-[16px]" onClick={onSave}>Save changes</Button></>}
+      footer={<><Button variant="ghost" className="w-[108px] h-[40px]" onClick={onClose}>Cancel</Button><Button data-tour="confirm-save" className="h-[40px] px-[16px]" onClick={onSave}>Save changes</Button></>}
     >
       <div className="flex gap-[10px] px-[14px] py-[10px] bg-[#fff6e9] text-[11px] leading-[17px] text-[#8a4b0f]">
         <TriangleAlert size={16} className="shrink-0 mt-[1px]" />
@@ -209,7 +209,7 @@ export function AssetDrawer({ asset, shared, overrides, onClose, onSave }: { ass
                 <p className="text-[12px] font-semibold">{f === 'vpnRequired' ? 'VPN access' : FIELD_LABEL[f]}</p>
                 <div className="flex items-center gap-[20px] pl-[10px]">
                   <Checkbox checked={!custom} onChange={() => setCustom(f, false)} label={inheritText[f]} />
-                  <Checkbox checked={custom} onChange={() => setCustom(f, true)} label="Set custom value" />
+                  <span data-tour={`drawer-custom-${f}`} className="inline-flex"><Checkbox checked={custom} onChange={() => setCustom(f, true)} label="Set custom value" /></span>
                 </div>
                 {custom && (
                   <div className="fade-up">
@@ -222,7 +222,7 @@ export function AssetDrawer({ asset, shared, overrides, onClose, onSave }: { ass
         </div>
         <div className="flex justify-end gap-[8px] px-[18px] py-[10px] bg-[#f3f3f2]">
           <Button variant="ghost" className="w-[108px] h-[40px]" onClick={onClose}>Cancel</Button>
-          <Button className="h-[40px] px-[16px]" onClick={() => onSave(local)}>Save changes</Button>
+          <Button data-tour="drawer-save" className="h-[40px] px-[16px]" onClick={() => onSave(local)}>Save changes</Button>
         </div>
       </aside>
     </div>
@@ -312,7 +312,7 @@ export function ConfigureAssets({
         <table className="w-full border-collapse">
           <thead>
             <tr>
-              <Th className="w-[42px]"><Checkbox checked={allOn} indeterminate={!allOn && someOn} onChange={() => setChecked(allOn ? [] : ids)} /></Th>
+              <Th className="w-[42px]"><span data-tour="select-all" className="inline-flex"><Checkbox checked={allOn} indeterminate={!allOn && someOn} onChange={() => setChecked(allOn ? [] : ids)} /></span></Th>
               <Th>Asset</Th>
               <Th>Type</Th>
               <Th>Rate limit</Th>

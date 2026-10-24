@@ -11,9 +11,9 @@ const DEPTHS: { id: Depth; text: string; recommended?: boolean }[] = [
 
 const card = 'bg-white rounded-[2px] p-[22px] flex flex-col gap-[20px]'
 
-function IconInput({ icon, type, value, onChange, placeholder }: { icon: React.ReactNode; type: 'date' | 'time'; value: string; onChange: (v: string) => void; placeholder: string }) {
+function IconInput({ icon, type, value, onChange, placeholder, tour }: { icon: React.ReactNode; type: 'date' | 'time'; value: string; onChange: (v: string) => void; placeholder: string; tour?: string }) {
   return (
-    <label className={cx(inputClass(!!value), 'relative flex items-center gap-[8px] h-[38px] px-[9px]')}>
+    <label data-tour={tour} className={cx(inputClass(!!value), 'relative flex items-center gap-[8px] h-[38px] px-[9px]')}>
       {icon}
       <input type={type} value={value} onChange={e => onChange(e.target.value)} aria-label={placeholder} className="flex-1 bg-transparent outline-none text-[11px] text-ink [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:inset-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer" />
     </label>
@@ -34,6 +34,7 @@ export function ExerciseDetails({ draft, setDraft, showErrors }: { draft: Exerci
         <div>
           <FieldLabel>Exercise name</FieldLabel>
           <input
+            data-tour="exercise-name"
             value={draft.name}
             onChange={e => set('name', e.target.value)}
             placeholder="e.g. Q4 Commerce Security Assessment"
@@ -44,6 +45,7 @@ export function ExerciseDetails({ draft, setDraft, showErrors }: { draft: Exerci
         <div>
           <FieldLabel>Objective</FieldLabel>
           <textarea
+            data-tour="objective"
             value={draft.objective}
             maxLength={400}
             onChange={e => set('objective', e.target.value)}
@@ -55,7 +57,7 @@ export function ExerciseDetails({ draft, setDraft, showErrors }: { draft: Exerci
 
       <section data-tour="depth" className={card}>
         <SectionTitle title="Testing depth" caption="Choose the level of coverage for the agreed scope." />
-        <div role="radiogroup" className="grid grid-cols-3 gap-[11px]">
+        <div role="radiogroup" data-tour="depth-options" className="grid grid-cols-3 gap-[11px]">
           {DEPTHS.map(d => {
             const on = draft.depth === d.id
             return (
@@ -81,13 +83,13 @@ export function ExerciseDetails({ draft, setDraft, showErrors }: { draft: Exerci
       <section data-tour="schedule" className={card}>
         <SectionTitle title="Schedule" caption="Set when testing activity is allowed to occur." />
         <div className="grid grid-cols-3 gap-[14px]">
-          <div><FieldLabel>Start date</FieldLabel><IconInput type="date" icon={<CalendarDays size={16} />} value={draft.startDate} onChange={v => set('startDate', v)} placeholder="Pick a date" /></div>
+          <div><FieldLabel>Start date</FieldLabel><IconInput tour="start-date" type="date" icon={<CalendarDays size={16} />} value={draft.startDate} onChange={v => set('startDate', v)} placeholder="Pick a date" /></div>
           <div>
             <FieldLabel>End date</FieldLabel>
             <IconInput type="date" icon={<CalendarDays size={16} />} value={draft.endDate} onChange={v => set('endDate', v)} placeholder="Pick a date" />
             {datesError && <p className="mt-[4px] text-[10px] text-[#c23b3b]">End date must be after the start date.</p>}
           </div>
-          <div><FieldLabel>Recurrence</FieldLabel><Select value={draft.recurrence} options={RECURRENCES} onChange={v => set('recurrence', v)} /></div>
+          <div data-tour="recurrence"><FieldLabel>Recurrence</FieldLabel><Select value={draft.recurrence} options={RECURRENCES} onChange={v => set('recurrence', v)} /></div>
           <div><FieldLabel>Start time</FieldLabel><IconInput type="time" icon={<Clock size={16} />} value={draft.startTime} onChange={v => set('startTime', v)} placeholder="Pick a time" /></div>
           <div><FieldLabel>End time</FieldLabel><IconInput type="time" icon={<Clock size={16} />} value={draft.endTime} onChange={v => set('endTime', v)} placeholder="Pick a time" /></div>
           <div><FieldLabel>Time zone</FieldLabel><Select value={draft.timeZone} options={TIME_ZONES} onChange={v => set('timeZone', v)} /></div>
@@ -98,7 +100,7 @@ export function ExerciseDetails({ draft, setDraft, showErrors }: { draft: Exerci
         <SectionTitle
           title="Include human hacker validation"
           caption="Add expert validation to complement automated findings."
-          right={<Toggle checked={draft.humanValidation} onChange={v => set('humanValidation', v)} />}
+          right={<span data-tour="validation-toggle" className="inline-flex"><Toggle checked={draft.humanValidation} onChange={v => set('humanValidation', v)} /></span>}
         />
         {draft.humanValidation && (
           <div className="fade-up flex flex-col gap-[16px]">
