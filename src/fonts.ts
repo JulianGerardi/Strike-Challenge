@@ -1,7 +1,6 @@
 /**
- * Aeonik Fono is a licensed typeface, so its files are not committed (see .gitignore).
- * When they are present in src/assets/fonts they get bundled and registered here;
- * without them the UI falls back to Inter.
+ * Aeonik Fono (licensed by Julian for web use) lives in src/assets/fonts. Every weight found
+ * there is bundled and registered here; if the files are ever removed the UI falls back to Inter.
  */
 const files = import.meta.glob('./assets/fonts/AeonikFono-*.otf', { eager: true, query: '?url', import: 'default' }) as Record<string, string>
 
