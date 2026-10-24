@@ -257,7 +257,7 @@ const quick = () => [
 ]
 
 function intent(text: string): 'create' | 'apply' | 'where' | 'filters' | 'hello' | 'unknown' {
-  const q = text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  const q = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
   if (/(donde|paso|estoy|ubic|where|which step|am i)/.test(q)) return 'where'
   if (/(asset|activo|aplic|apply|masiv|bulk|config|setting|override|excepci|exception)/.test(q)) return 'apply'
   if (/(crea|nuevo|ejercicio|empez|new|exercise|start)/.test(q)) return 'create'
