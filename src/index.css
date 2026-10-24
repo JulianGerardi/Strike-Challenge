@@ -1,9 +1,3 @@
-/* Aeonik Fono, supplied by Julian; used where the Figma uses it (greeting, filter button, table headers) */
-@font-face { font-family: 'Aeonik Fono'; font-style: normal; font-weight: 300; font-display: swap; src: url('./assets/fonts/AeonikFono-Light.otf') format('opentype'); }
-@font-face { font-family: 'Aeonik Fono'; font-style: normal; font-weight: 400; font-display: swap; src: url('./assets/fonts/AeonikFono-Regular.otf') format('opentype'); }
-@font-face { font-family: 'Aeonik Fono'; font-style: normal; font-weight: 500; font-display: swap; src: url('./assets/fonts/AeonikFono-Medium.otf') format('opentype'); }
-@font-face { font-family: 'Aeonik Fono'; font-style: normal; font-weight: 700; font-display: swap; src: url('./assets/fonts/AeonikFono-Bold.otf') format('opentype'); }
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

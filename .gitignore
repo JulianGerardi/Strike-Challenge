@@ -23,3 +23,5 @@ dist-ssr
 *.sln
 *.sw?
 dist-single
+# Licensed typeface: keep it local, never publish it
+src/assets/fonts/
