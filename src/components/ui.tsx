@@ -1,4 +1,4 @@
-import { useRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import { PixelIcon, type PixelIconName } from './PixelIcon'
 import { t, tv } from '../i18n'
 import { ArrowRight, Check, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -327,5 +327,52 @@ export function SelectionChip({ count, onClear, tour }: { count: number; onClear
       {count} {count === 1 ? 'asset' : 'assets'} {t('selected', count === 1 ? 'seleccionado' : 'seleccionados')}
       {count > 0 && <button onClick={onClear} className="text-[12px] text-[#2b9ea2] hover:underline font-semibold">{t('Clear', 'Limpiar')}</button>}
     </span>
+  )
+}
+
+/** Chevron button that expands a table row. */
+export function ExpandToggle({ open, onToggle, label, tour }: { open: boolean; onToggle: () => void; label: string; tour?: string }) {
+  return (
+    <button
+      data-tour={tour}
+      onClick={e => { e.stopPropagation(); onToggle() }}
+      aria-expanded={open}
+      aria-label={label}
+      className={cx('grid place-items-center size-[30px] transition-colors', open ? 'bg-brand-soft text-[#17575a]' : 'text-[#505557] hover:bg-black/5')}
+    >
+      <ChevronDown size={17} className={cx('transition-transform duration-200', open && 'rotate-180')} />
+    </button>
+  )
+}
+
+/** Full-width row under an expanded table row. */
+export function DetailRow({ colSpan, children }: { colSpan: number; children: ReactNode }) {
+  // Pin the panel to the visible part of a horizontally scrolled table.
+  const ref = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState<number>()
+  useEffect(() => {
+    const scroller = ref.current?.closest('.overflow-x-auto') as HTMLElement | null
+    if (!scroller) return
+    const fit = () => setWidth(scroller.scrollWidth > scroller.clientWidth ? scroller.clientWidth : undefined)
+    fit()
+    const ro = new ResizeObserver(fit)
+    ro.observe(scroller)
+    return () => ro.disconnect()
+  }, [])
+  return (
+    <tr className="bg-[#fafafa]">
+      <td colSpan={colSpan} className="border-b border-[#e2e3e3] p-0">
+        <div ref={ref} style={{ width }} className="row-detail sticky left-0 px-[16px] sm:px-[54px] py-[16px]">{children}</div>
+      </td>
+    </tr>
+  )
+}
+
+export function DetailItem({ label, children, wide }: { label: string; children: ReactNode; wide?: boolean }) {
+  return (
+    <div className={cx('min-w-0', wide && 'sm:col-span-2')}>
+      <p className="text-[11px] uppercase tracking-[0.4px] text-[#73787a]">{label}</p>
+      <div className="mt-[4px] text-[13px] leading-[20px] text-[#24282a]">{children}</div>
+    </div>
   )
 }

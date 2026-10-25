@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import type { Asset } from '../data'
-import { ASSETS } from '../data'
+import { ASSETS, ASSET_PROFILES, formatDate } from '../data'
 import { t, tv } from '../i18n'
-import { AssetMark, Badge, Checkbox, PageHeader, Pagination, SelectionChip, Td, Th, cx } from '../components/ui'
+import { AssetMark, Badge, Checkbox, DetailItem, DetailRow, ExpandToggle, PageHeader, Pagination, SelectionChip, Td, Th, cx } from '../components/ui'
 import { TableToolbar, useTableFilters, type FilterGroup } from '../components/TableToolbar'
 
 const PAGE_SIZE = 8
@@ -23,6 +23,7 @@ export function SelectAssets({ selected, setSelected, showErrors }: { selected: 
   const visibleIds = api.filtered.map(a => a.id)
   const allOn = visibleIds.length > 0 && visibleIds.every(id => selected.includes(id))
   const someOn = visibleIds.some(id => selected.includes(id))
+  const [open, setOpen] = useState<string | null>(null)
   const toggle = (id: string) => setSelected(selected.includes(id) ? selected.filter(s => s !== id) : [...selected, id])
   const toggleAll = () => setSelected(allOn ? selected.filter(id => !visibleIds.includes(id)) : Array.from(new Set([...selected, ...visibleIds])))
 
@@ -49,13 +50,15 @@ export function SelectAssets({ selected, setSelected, showErrors }: { selected: 
               <Th className="w-[12%]">{t('Environment', 'Entorno')}</Th>
               <Th>{t('Identifier', 'Identificador')}</Th>
               <Th className="w-[89px] text-center">{t('Status', 'Estado')}</Th>
+              <Th className="w-[50px]" />
             </tr>
           </thead>
           <tbody>
             {rows.map((a, i) => {
               const on = selected.includes(a.id)
               return (
-                <tr key={a.id} data-tour={i === 0 ? 'asset-row' : undefined} onClick={() => toggle(a.id)} className={cx('h-[51px] cursor-pointer transition-colors', on ? 'bg-[#eefcfc]' : 'hover:bg-[#fafafa]')}>
+                <Fragment key={a.id}>
+                <tr data-tour={i === 0 ? 'asset-row' : undefined} onClick={() => toggle(a.id)} className={cx('h-[51px] cursor-pointer transition-colors', on ? 'bg-[#eefcfc]' : 'hover:bg-[#fafafa]')}>
                   <Td><Checkbox checked={on} onChange={() => toggle(a.id)} /></Td>
                   <Td>
                     <div className="flex items-center gap-[9px]">
@@ -70,7 +73,10 @@ export function SelectAssets({ selected, setSelected, showErrors }: { selected: 
                   <Td>{tv(a.environment)}</Td>
                   <Td className="font-code text-[12px] text-[#657069]">{a.identifier}</Td>
                   <Td className="text-center"><Badge>{a.status}</Badge></Td>
+                  <Td><ExpandToggle tour={i === 0 ? 'asset-expand' : undefined} open={open === a.id} onToggle={() => setOpen(open === a.id ? null : a.id)} label={t(`Show details for ${a.name}`, `Ver detalle de ${a.name}`)} /></Td>
                 </tr>
+                {open === a.id && <AssetDetail asset={a} />}
+                </Fragment>
               )
             })}
           </tbody>
@@ -79,5 +85,31 @@ export function SelectAssets({ selected, setSelected, showErrors }: { selected: 
         <Pagination page={page} pageSize={PAGE_SIZE} total={api.filtered.length} onPage={setPage} noun="assets" />
       </div>
     </>
+  )
+}
+
+function AssetDetail({ asset }: { asset: Asset }) {
+  const p = ASSET_PROFILES[asset.id]
+  if (!p) return null
+  const f = p.findings
+  const total = f.critical + f.high + f.medium + f.low
+  const sev: [number, string, string][] = [[f.critical, t('Critical', 'Crítico'), 'bg-[#c23b3b]'], [f.high, t('High', 'Alto'), 'bg-[#e07b39]'], [f.medium, t('Medium', 'Medio'), 'bg-[#e0b339]'], [f.low, t('Low', 'Bajo'), 'bg-[#8fa3a6]']]
+  return (
+    <DetailRow colSpan={7}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-[24px] gap-y-[14px]">
+        <DetailItem label={t('Description', 'Descripción')} wide>{t(...p.description)}</DetailItem>
+        <DetailItem label={t('Owner team', 'Equipo responsable')}>{p.owner}</DetailItem>
+        <DetailItem label={t('Tech stack', 'Tecnología')}>{p.stack}</DetailItem>
+        <DetailItem label={t('Region', 'Región')}>{p.region}</DetailItem>
+        <DetailItem label={t('Last tested', 'Último testeo')}>{p.lastTested ? formatDate(p.lastTested) : t('Never tested', 'Nunca testeado')}</DetailItem>
+        <DetailItem label={t('Open findings', 'Hallazgos abiertos')} wide>
+          {total === 0 ? t('No open findings', 'Sin hallazgos abiertos') : (
+            <div className="flex flex-wrap gap-x-[14px] gap-y-[4px]">
+              {sev.map(([n, label, dot]) => <span key={label} className={cx('inline-flex items-center gap-[6px]', n === 0 && 'text-[#969a9c]')}><span className={cx('size-[7px] rounded-full', n ? dot : 'bg-[#d5d7d8]')} />{n} {label}</span>)}
+            </div>
+          )}
+        </DetailItem>
+      </div>
+    </DetailRow>
   )
 }

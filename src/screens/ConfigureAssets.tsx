@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { Check, Clock, Pencil, SlidersHorizontal, TriangleAlert, X } from 'lucide-react'
 import type { Asset, AssetOverrides, ExerciseDraft, SharedConfig, TimeWindow } from '../data'
 import { ASSETS, EXCLUDABLE_TESTS, RATE_LIMITS, effective, excludedLabel, formatDate, hasOverrides } from '../data'
-import { AssetMark, Badge, Button, Checkbox, FieldLabel, PageHeader, PickerInput, Segmented, Select, SelectionChip, Td, Th, cx } from '../components/ui'
+import { AssetMark, Badge, Button, Checkbox, DetailItem, DetailRow, ExpandToggle, FieldLabel, PageHeader, PickerInput, Segmented, Select, SelectionChip, Td, Th, cx } from '../components/ui'
 import { PixelIcon } from '../components/PixelIcon'
 import { t, tv } from '../i18n'
 import { TableToolbar, useTableFilters, type FilterGroup } from '../components/TableToolbar'
@@ -259,6 +259,7 @@ export function ConfigureAssets({
   const ids = api.filtered.map(r => r.id)
   const allOn = ids.length > 0 && ids.every(id => checked.includes(id))
   const someOn = ids.some(id => checked.includes(id))
+  const [open, setOpen] = useState<string | null>(null)
   const toggle = (id: string) => setChecked(checked.includes(id) ? checked.filter(c => c !== id) : [...checked, id])
 
   return (
@@ -319,14 +320,15 @@ export function ConfigureAssets({
               <Th>{t('Excluded tests', 'Pruebas excluidas')}</Th>
               <Th>{t('Time start', 'Inicio')}</Th>
               <Th>{t('Time end', 'Fin')}</Th>
-              <Th className="w-[50px]" />
+              <Th className="w-[84px]" />
             </tr>
           </thead>
           <tbody>
-            {api.filtered.map(r => {
+            {api.filtered.map((r, i) => {
               const on = checked.includes(r.id)
               return (
-                <tr key={r.id} className={cx('h-[54px] transition-colors', on ? 'bg-[#eefcfc]' : 'hover:bg-[#fafafa]')}>
+                <Fragment key={r.id}>
+                <tr className={cx('h-[54px] transition-colors', on ? 'bg-[#eefcfc]' : 'hover:bg-[#fafafa]')}>
                   <Td><Checkbox checked={on} onChange={() => toggle(r.id)} /></Td>
                   <Td>
                     <div className="flex items-center gap-[9px]">
@@ -344,9 +346,14 @@ export function ConfigureAssets({
                   <Td>{r.eff.window.start} hs</Td>
                   <Td>{r.eff.window.end} hs</Td>
                   <Td>
-                    <button data-tour="edit-asset" onClick={() => onEditAsset(r.id)} aria-label={`${t('Edit', 'Editar')} ${r.name}`} className="grid place-items-center size-[30px] hover:bg-black/5"><Pencil size={17} /></button>
+                    <div className="flex items-center gap-[2px]">
+                      <button data-tour="edit-asset" onClick={() => onEditAsset(r.id)} aria-label={`${t('Edit', 'Editar')} ${r.name}`} className="grid place-items-center size-[30px] hover:bg-black/5"><Pencil size={17} /></button>
+                      <ExpandToggle tour={i === 0 ? 'config-expand' : undefined} open={open === r.id} onToggle={() => setOpen(open === r.id ? null : r.id)} label={t(`Show configuration for ${r.name}`, `Ver configuración de ${r.name}`)} />
+                    </div>
                   </Td>
                 </tr>
+                {open === r.id && <ConfigDetail draft={draft} shared={shared} o={r.o} onEdit={() => onEditAsset(r.id)} />}
+                </Fragment>
               )
             })}
             {api.filtered.length === 0 && (
@@ -357,5 +364,40 @@ export function ConfigureAssets({
         </div>
       </div>
     </>
+  )
+}
+
+function ConfigDetail({ draft, shared, o, onEdit }: { draft: ExerciseDraft; shared: SharedConfig; o: AssetOverrides; onEdit: () => void }) {
+  const eff = effective(shared, o)
+  const Source = ({ custom }: { custom: boolean }) => (
+    <span className={cx('ml-[8px] inline-flex items-center h-[20px] px-[6px] text-[11px] font-semibold align-middle', custom ? 'bg-brand-soft text-[#17575a]' : 'bg-[#eeefef] text-[#73787a]')}>
+      {custom ? t('Set for this asset', 'Propio de este asset') : t('Exercise default', 'Del ejercicio')}
+    </span>
+  )
+  const custom = Object.values(o).filter(v => v !== undefined).length
+  return (
+    <DetailRow colSpan={9}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-[24px] gap-y-[14px]">
+        <DetailItem label="Rate limit">{eff.rateLimit} req/s<Source custom={o.rateLimit !== undefined} /></DetailItem>
+        <DetailItem label={t('VPN access', 'VPN')}>{tv(vpnText(eff.vpnRequired))}<Source custom={o.vpnRequired !== undefined} /></DetailItem>
+        <DetailItem label={t('Testing window', 'Ventana de testing')}>{windowText(eff.window)}<Source custom={o.window !== undefined} /></DetailItem>
+        <DetailItem label={t('Test depth', 'Profundidad')}>{tv(draft.depth)}<Source custom={false} /></DetailItem>
+        <DetailItem label={t('Excluded tests', 'Pruebas excluidas')} wide>
+          {eff.excludedTests.length ? (
+            <>
+              <div className="flex flex-wrap gap-[6px]">{eff.excludedTests.map(x => <span key={x} className="h-[24px] inline-flex items-center px-[8px] bg-white border border-[#e2e3e3] text-[12px]">{tv(x)}</span>)}</div>
+              <div className="mt-[4px] -ml-[8px]"><Source custom={o.excludedTests !== undefined} /></div>
+            </>
+          ) : <>{t('None', 'Ninguna')}<Source custom={o.excludedTests !== undefined} /></>}
+        </DetailItem>
+        <DetailItem label={t('Human validation', 'Validación humana')}>{draft.humanValidation ? t('Yes', 'Sí') : 'No'}<Source custom={false} /></DetailItem>
+        <div className="flex items-end">
+          <p className="text-[12px] text-[#73787a]">
+            {custom ? t(`${custom} setting${custom === 1 ? '' : 's'} customized.`, `${custom} ${custom === 1 ? 'valor personalizado' : 'valores personalizados'}.`) : t('Uses every exercise default.', 'Usa todos los valores del ejercicio.')}{' '}
+            <button onClick={onEdit} className="font-semibold text-[#2b9ea2] hover:underline">{t('Edit', 'Editar')}</button>
+          </p>
+        </div>
+      </div>
+    </DetailRow>
   )
 }
