@@ -34,13 +34,13 @@ export function SelectAssets({ selected, setSelected, showErrors }: { selected: 
         groups={GROUPS}
         placeholder={t('Search assets', 'Buscar assets')}
         right={
-          <span data-tour="selection-count" className={cx('inline-flex items-center gap-[6px] h-[28px] px-[10px] text-[11px] font-semibold transition-colors', selected.length ? 'bg-brand-soft text-[#17575a] border border-[#bde7e9]' : 'text-[#969a9c]')}>
+          <span data-tour="selection-count" className={cx('inline-flex items-center gap-[6px] h-[28px] px-[10px] text-[13px] font-semibold transition-colors', selected.length ? 'bg-brand-soft text-[#17575a] border border-[#bde7e9]' : 'text-[#969a9c]')}>
             {selected.length} {selected.length === 1 ? 'asset' : 'assets'} {t('selected', selected.length === 1 ? 'seleccionado' : 'seleccionados')}
-            {selected.length > 0 && <button onClick={() => setSelected([])} className="text-[10px] text-[#2b9ea2] hover:underline font-semibold">{t('Clear', 'Limpiar')}</button>}
+            {selected.length > 0 && <button onClick={() => setSelected([])} className="text-[12px] text-[#2b9ea2] hover:underline font-semibold">{t('Clear', 'Limpiar')}</button>}
           </span>
         }
       />
-      {showErrors && selected.length === 0 && <p className="text-[11px] text-[#c23b3b] -mt-[8px]">{t('Select at least one asset to continue.', 'Seleccioná al menos un asset para continuar.')}</p>}
+      {showErrors && selected.length === 0 && <p className="text-[13px] text-[#c23b3b] -mt-[8px]">{t('Select at least one asset to continue.', 'Seleccioná al menos un asset para continuar.')}</p>}
       <div data-tour="assets-table" className="bg-white border border-[#e5e5e5] rounded-[6px] overflow-hidden">
         <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] border-collapse">
@@ -65,13 +65,13 @@ export function SelectAssets({ selected, setSelected, showErrors }: { selected: 
                       <AssetMark name={a.name} />
                       <div>
                         <p className="font-bold text-ink">{a.name}</p>
-                        <p className="pt-[2px] text-[9px] leading-[14px] text-[#969a9c]">{tv(a.audience)}</p>
+                        <p className="pt-[2px] text-[11px] leading-[17px] text-[#969a9c]">{tv(a.audience)}</p>
                       </div>
                     </div>
                   </Td>
                   <Td><Badge tone="type">{a.type}</Badge></Td>
                   <Td>{tv(a.environment)}</Td>
-                  <Td className="font-code text-[10px] text-[#657069]">{a.identifier}</Td>
+                  <Td className="font-code text-[12px] text-[#657069]">{a.identifier}</Td>
                   <Td className="text-center"><Badge>{a.status}</Badge></Td>
                 </tr>
               )

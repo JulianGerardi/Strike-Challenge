@@ -9,8 +9,8 @@ function Section({ title, onEdit, children, tour }: { title: string; onEdit: () 
   return (
     <section data-tour={tour} className="bg-white">
       <div className="flex items-center justify-between h-[56px] sm:h-[66px] px-[16px] sm:px-[21px] bg-[#effbfb]">
-        <h3 className="text-[13px] font-medium">{title}</h3>
-        <button data-tour={tour ? `${tour}-edit` : undefined} onClick={onEdit} className="text-[10px] font-bold uppercase tracking-[0.3px] underline underline-offset-2 hover:text-[#2b9ea2]">{t('Edit', 'Editar')}</button>
+        <h3 className="text-[15px] font-medium">{title}</h3>
+        <button data-tour={tour ? `${tour}-edit` : undefined} onClick={onEdit} className="text-[12px] font-bold uppercase tracking-[0.3px] underline underline-offset-2 hover:text-[#2b9ea2]">{t('Edit', 'Editar')}</button>
       </div>
       <div className="px-[16px] sm:px-[21px] py-[20px]">{children}</div>
     </section>
@@ -20,8 +20,8 @@ function Section({ title, onEdit, children, tour }: { title: string; onEdit: () 
 function KV({ k, v }: { k: string; v: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[9px] uppercase tracking-[0.6px] text-[#73787a]">{k}</p>
-      <p className="mt-[8px] text-[11px] font-semibold leading-[17px]">{v}</p>
+      <p className="text-[11px] uppercase tracking-[0.6px] text-[#73787a]">{k}</p>
+      <p className="mt-[8px] text-[13px] font-semibold leading-[20px]">{v}</p>
     </div>
   )
 }
@@ -54,8 +54,8 @@ export function Review({ draft, shared, selectedIds, overrides, onEditStep, onEd
               <div className="sm:col-span-2"><KV k={t('Objective', 'Objetivo')} v={draft.objective || '—'} /></div>
               <KV k={t('Testing depth', 'Profundidad')} v={tv(draft.depth)} />
               <KV k={t('Dates', 'Fechas')} v={`${formatDate(draft.startDate)} – ${formatDate(draft.endDate)}`} />
-              <KV k={t('Recurrence', 'Recurrencia')} v={tv(draft.recurrence)} />
-              <KV k={t('Testing window', 'Ventana de testing')} v={`${draft.startTime || '—'}–${draft.endTime || '—'} · ${draft.timeZone}`} />
+              <KV k={t('Recurrence', 'Recurrencia')} v={tv(draft.recurrence) || '—'} />
+              <KV k={t('Testing window', 'Ventana de testing')} v={[draft.startTime && draft.endTime ? `${draft.startTime}–${draft.endTime}` : '', draft.timeZone].filter(Boolean).join(' · ') || '—'} />
               <KV k={t('Human validation', 'Validación humana')} v={draft.humanValidation ? t('Included (subject to confirmation)', 'Incluida (sujeta a confirmación)') : t('Not included', 'No incluida')} />
             </div>
           </Section>
@@ -64,16 +64,16 @@ export function Review({ draft, shared, selectedIds, overrides, onEditStep, onEd
             <div className="flex flex-wrap gap-y-[10px] border-y border-[#e5e5e5] py-[12px] mb-[8px]">
               {[[t('Assets in scope', 'Assets en alcance'), assets.length] as const, ...types.map(t => [t, assets.filter(a => a.type === t).length] as const)].map(([k, n], i) => (
                 <div key={k} className={cx('px-[24px] first:pl-[8px]', i < 3 && 'border-r border-[#e5e5e5]')}>
-                  <p className="text-[16px] font-semibold">{n}</p>
-                  <p className="mt-[4px] text-[9px] text-[#73787a]">{tv(k)}</p>
+                  <p className="text-[18px] font-semibold">{n}</p>
+                  <p className="mt-[4px] text-[11px] text-[#73787a]">{tv(k)}</p>
                 </div>
               ))}
             </div>
             {assets.map(a => (
               <div key={a.id} className="flex items-center justify-between py-[9px] border-b border-[#f0f0f0] last:border-0">
                 <div>
-                  <p className="text-[10px] font-bold">{a.name}</p>
-                  <p className="font-code text-[9px] text-[#969a9c]">{a.identifier}</p>
+                  <p className="text-[12px] font-bold">{a.name}</p>
+                  <p className="font-code text-[11px] text-[#969a9c]">{a.identifier}</p>
                 </div>
                 <Badge tone="type">{a.type}</Badge>
               </div>
@@ -90,17 +90,17 @@ export function Review({ draft, shared, selectedIds, overrides, onEditStep, onEd
           </Section>
 
           <Section title={t('Custom configurations', 'Configuraciones personalizadas')} onEdit={() => onEditStep(2)} tour="review-custom">
-            {custom.length === 0 && <p className="text-[11px] text-[#73787a]">{t('Every asset inherits the shared configuration.', 'Todos los assets heredan la configuración compartida.')}</p>}
+            {custom.length === 0 && <p className="text-[13px] text-[#73787a]">{t('Every asset inherits the shared configuration.', 'Todos los assets heredan la configuración compartida.')}</p>}
             {custom.map(a => (
               <div key={a.id} className="flex items-center justify-between py-[12px] border-b border-[#ececec] last:border-0">
                 <div className="flex items-center gap-[10px]">
                   <AssetMark name={a.name} />
                   <div>
-                    <p className="text-[11px] font-bold">{a.name}</p>
-                    <p className="mt-[3px] text-[9px] text-[#73787a]">{overrideSummary(overrides[a.id]!, shared)}</p>
+                    <p className="text-[13px] font-bold">{a.name}</p>
+                    <p className="mt-[3px] text-[11px] text-[#73787a]">{overrideSummary(overrides[a.id]!, shared)}</p>
                   </div>
                 </div>
-                <button onClick={() => onEditAsset(a.id)} className="text-[10px] font-bold uppercase tracking-[0.3px] underline underline-offset-2 hover:text-[#2b9ea2]">{t('Edit asset', 'Editar asset')}</button>
+                <button onClick={() => onEditAsset(a.id)} className="text-[12px] font-bold uppercase tracking-[0.3px] underline underline-offset-2 hover:text-[#2b9ea2]">{t('Edit asset', 'Editar asset')}</button>
               </div>
             ))}
           </Section>
@@ -110,11 +110,11 @@ export function Review({ draft, shared, selectedIds, overrides, onEditStep, onEd
           <div className={cx('flex items-center gap-[14px] px-[20px] py-[14px] border-l-[4px]', ready ? 'bg-[#e8f8ef] border-[#1f9d6b]' : 'bg-[#fff6e9] border-[#e0a14a]')}>
             <span className="grid place-items-center size-[38px] bg-white">{ready ? <Check size={18} className="text-[#1f9d6b]" /> : <TriangleAlert size={18} className="text-[#c27a17]" />}</span>
             <div>
-              <p className="text-[9px] uppercase tracking-[0.6px] text-[#73787a]">{t('Readiness', 'Estado')}</p>
-              <p className="text-[15px] font-semibold">{ready ? t('Ready', 'Listo') : t('Needs attention', 'Requiere atención')}</p>
+              <p className="text-[11px] uppercase tracking-[0.6px] text-[#73787a]">{t('Readiness', 'Estado')}</p>
+              <p className="text-[16px] font-semibold">{ready ? t('Ready', 'Listo') : t('Needs attention', 'Requiere atención')}</p>
             </div>
           </div>
-          <div className="px-[24px] py-[18px] flex flex-col gap-[14px] text-[10px]">
+          <div className="px-[24px] py-[18px] flex flex-col gap-[14px] text-[12px]">
             {[
               [t('Assets reviewed', 'Assets revisados'), `${assets.length} / ${assets.length}`],
               [t('Missing required setup', 'Configuración faltante'), missing],
@@ -123,7 +123,7 @@ export function Review({ draft, shared, selectedIds, overrides, onEditStep, onEd
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between"><span className="text-[#505557]">{k}</span><b>{v}</b></div>
             ))}
-            <p className="mt-[14px] text-[10px] leading-[15px] text-[#666b6e]">
+            <p className="mt-[14px] text-[12px] leading-[18px] text-[#666b6e]">
               {ready ? t('All required configuration is complete. Creating the exercise will not start testing activity.', 'Toda la configuración requerida está completa. Crear el ejercicio no inicia la actividad de testing.') : t('Resolve the items above before creating the exercise.', 'Resolvé los puntos de arriba antes de crear el ejercicio.')}
             </p>
           </div>

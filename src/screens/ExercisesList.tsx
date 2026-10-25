@@ -24,7 +24,7 @@ export function ExercisesList({ exercises, onCreate }: { exercises: Exercise[]; 
 
   return (
     <>
-      <nav className="flex items-center gap-[7px] text-[10px] leading-[15px]">
+      <nav className="flex items-center gap-[7px] text-[12px] leading-[18px]">
         <span className="text-[#7d8284]">{t('Exercises', 'Ejercicios')}</span>
         <ChevronRight size={14} className="text-[#7d8284]" />
         <span className="text-black">{t('New exercise', 'Nuevo ejercicio')}</span>
@@ -52,7 +52,7 @@ export function ExercisesList({ exercises, onCreate }: { exercises: Exercise[]; 
               <tr key={e.id + i} className={cx('h-[52px] hover:bg-[#fafafa]', e.isNew && 'row-new')}>
                 <Td>
                   <p className="font-bold text-[#3e4345]">{e.name}</p>
-                  <p className="pt-[3px] text-[9px] leading-[14px] text-[#969a9c]">{e.id} · {formatUpdated(e.updated)}</p>
+                  <p className="pt-[3px] text-[11px] leading-[17px] text-[#969a9c]">{e.id} · {formatUpdated(e.updated)}</p>
                 </Td>
                 <Td className="font-medium">{e.assets} {e.assets === 1 ? 'asset' : 'assets'}</Td>
                 <Td className="font-medium">{formatSchedule(e.schedule)}</Td>

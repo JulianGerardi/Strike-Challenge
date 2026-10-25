@@ -20,14 +20,14 @@ export function ExerciseCreated({ id, draft, assetCount, customCount }: { id: st
           </svg>
         </span>
       </div>
-      <h1 className="mt-[34px] text-center text-[24px] leading-[30px] sm:text-[30px] sm:leading-[36px] font-medium tracking-[-0.3px]">{t('Exercise created', 'Ejercicio creado')}</h1>
-      <p className="mt-[10px] max-w-[364px] text-center text-[12px] leading-[19px] text-[#73787a]">
+      <h1 className="mt-[34px] text-center text-[26px] leading-[32px] sm:text-[34px] sm:leading-[40px] font-medium tracking-[-0.3px]">{t('Exercise created', 'Ejercicio creado')}</h1>
+      <p className="mt-[10px] max-w-[364px] text-center text-[14px] leading-[22px] text-[#73787a]">
         {t('Your exercise has been created. Review its configuration before coordinating the testing activities.', 'Tu ejercicio fue creado. Revisá su configuración antes de coordinar las actividades de testing.')}
       </p>
       <div data-tour="created-card" className="mt-[20px] w-full bg-white px-[14px] sm:px-[20px] py-[24px] sm:py-[32px] fade-up">
         <div className="flex items-stretch">
           <div className="flex-1 px-[16px] py-[12px] bg-[#b6f8fa] border-l-[4px] border-[#145c62]">
-            <p className="text-[8px] uppercase tracking-[0.3px]">{t('Security exercise', 'Ejercicio de seguridad')}</p>
+            <p className="text-[10px] uppercase tracking-[0.3px]">{t('Security exercise', 'Ejercicio de seguridad')}</p>
             <p className="mt-[4px] text-[14px] font-bold">{draft.name}</p>
           </div>
           <div className="grid place-items-center px-[14px] bg-[#effcfd]"><Badge>Complete</Badge></div>
@@ -42,8 +42,8 @@ export function ExerciseCreated({ id, draft, assetCount, customCount }: { id: st
             [t('Configuration', 'Configuración'), t(`${customCount} custom ${customCount === 1 ? 'exception' : 'exceptions'}`, `${customCount} ${customCount === 1 ? 'excepción personalizada' : 'excepciones personalizadas'}`)],
           ].map(([k, v]) => (
             <div key={k}>
-              <p className="text-[8px] uppercase tracking-[0.4px] text-[#73787a]">{k}</p>
-              <p className="mt-[6px] text-[10px] font-semibold">{v}</p>
+              <p className="text-[10px] uppercase tracking-[0.4px] text-[#73787a]">{k}</p>
+              <p className="mt-[6px] text-[12px] font-semibold">{v}</p>
             </div>
           ))}
         </div>

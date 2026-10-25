@@ -15,7 +15,7 @@ export function Button({ variant = 'primary', icon, iconRight, className, childr
     <button
       {...rest}
       className={cx(
-        'inline-flex items-center justify-center gap-[7px] h-[36px] px-[14px] font-bold text-[10px] tracking-[0.3px] uppercase text-brand-ink transition-colors whitespace-nowrap',
+        'inline-flex items-center justify-center gap-[7px] h-[36px] px-[14px] font-bold text-[12px] tracking-[0.3px] uppercase text-brand-ink transition-colors whitespace-nowrap',
         variant === 'primary' && 'bg-brand border border-brand-border hover:bg-[#6edadd] disabled:opacity-50',
         variant === 'outline' && 'bg-white border border-[#e7e7e7] hover:border-[#cfd1d2] disabled:opacity-50',
         variant === 'ghost' && 'hover:bg-black/5 disabled:opacity-40',
@@ -57,7 +57,7 @@ const BADGE_STYLES: Record<string, string> = {
 export function Badge({ children, tone }: { children: ReactNode; tone?: string }) {
   const key = tone ?? (typeof children === 'string' ? children : 'soft')
   return (
-    <span className={cx('inline-flex items-center justify-center px-[7px] py-[3px] border rounded-[1px] font-[680] font-bold text-[8px] leading-[12px] tracking-[0.3px] uppercase whitespace-nowrap', BADGE_STYLES[key] ?? BADGE_STYLES.soft)}>
+    <span className={cx('inline-flex items-center justify-center px-[7px] py-[3px] border rounded-[1px] font-[680] font-bold text-[10px] leading-[14px] tracking-[0.3px] uppercase whitespace-nowrap', BADGE_STYLES[key] ?? BADGE_STYLES.soft)}>
       {typeof children === 'string' ? tv(children) : children}
     </span>
   )
@@ -81,7 +81,7 @@ export function Checkbox({ checked, indeterminate, onChange, label, className }:
         {checked && <Check size={12} strokeWidth={2} className="text-ink" />}
         {!checked && indeterminate && <span className="w-[8px] h-[2px] bg-ink" />}
       </span>
-      {label && <span className="text-[11px] text-ink tracking-[-0.2px]">{label}</span>}
+      {label && <span className="text-[13px] text-ink tracking-[-0.2px]">{label}</span>}
     </label>
   )
 }
@@ -92,8 +92,8 @@ export function PageHeader({ title, caption, action }: { title: string; caption:
   return (
     <div className="flex flex-wrap items-center justify-between gap-[14px] w-full">
       <div>
-        <h1 className="text-[22px] leading-[27px] sm:text-[27px] sm:leading-[31px] font-[450] font-medium tracking-[-0.04px] text-ink">{title}</h1>
-        <p className="pt-[3px] text-[11px] leading-[17px] text-[#73787a] tracking-[-0.2px]">{caption}</p>
+        <h1 className="text-[24px] leading-[30px] sm:text-[30px] sm:leading-[36px] font-[450] font-medium tracking-[-0.04px] text-ink">{title}</h1>
+        <p className="pt-[3px] text-[13px] leading-[20px] text-[#73787a] tracking-[-0.2px]">{caption}</p>
       </div>
       {action}
     </div>
@@ -106,8 +106,8 @@ export const STEPS = ['Exercise details', 'Select assets', 'Configure', 'Review'
 
 export function Stepper({ active, onGo, editing }: { active: number; onGo?: (i: number) => void; editing?: boolean }) {
   return (
-    <div data-tour="stepper" className="flex items-center justify-center w-full h-[60px]">
-      <div className="flex items-center w-[850px] max-w-full">
+    <div data-tour="stepper" className="flex items-center justify-center w-full h-[72px]">
+      <div className="flex items-center w-[920px] max-w-full">
         {STEPS.map((label, i) => {
           // While editing from Review every other step is already complete.
           const done = i !== active && (i < active || !!editing)
@@ -118,28 +118,28 @@ export function Stepper({ active, onGo, editing }: { active: number; onGo?: (i: 
               <button
                 disabled={!done}
                 onClick={() => onGo?.(i)}
-                className="group flex items-center gap-[8px] py-[10px] disabled:cursor-default"
+                className="group flex items-center gap-[10px] py-[10px] disabled:cursor-default"
                 aria-current={current ? 'step' : undefined}
               >
                 {/* key by state so the entry animation replays whenever a step changes state */}
                 <span
                   key={state}
                   className={cx(
-                    'step-dot relative grid place-items-center size-[22px] text-[9px] font-medium tracking-[0.4px] transition-colors duration-300',
+                    'step-dot relative grid place-items-center size-[28px] text-[12px] font-medium tracking-[0.4px] transition-colors duration-300',
                     done && 'step-pop bg-brand-dark border border-brand-dark group-hover:bg-[#1c7279]',
                     current && 'step-pop step-current bg-brand text-[#102c2e]',
                     !done && !current && 'bg-white text-[#686d6f]',
                   )}
                 >
                   {done ? (
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
                       <path className="step-check" d="M4 12.5l5 5L20 6.5" />
                     </svg>
                   ) : (
                     i + 1
                   )}
                 </span>
-                <span className={cx('text-[10px] leading-[15px] font-medium uppercase tracking-[-0.016px] whitespace-nowrap transition-colors duration-500', !current && 'hidden sm:inline', done ? 'text-brand-dark' : current ? 'text-ink' : 'text-[#8b9092]')}>{tv(label)}</span>
+                <span className={cx('text-[12px] leading-[18px] font-medium uppercase tracking-[-0.016px] whitespace-nowrap transition-colors duration-500', !current && 'hidden sm:inline', done ? 'text-brand-dark' : current ? 'text-ink' : 'text-[#8b9092]')}>{tv(label)}</span>
               </button>
               {i < STEPS.length - 1 && (
                 <span className="relative flex-1 h-px mx-[8px] sm:mx-[16px] bg-[#d7d9da] overflow-hidden">
@@ -160,10 +160,10 @@ export function Stepper({ active, onGo, editing }: { active: number; onGo?: (i: 
 /* ---------- Form controls ---------- */
 
 export function FieldLabel({ children }: { children: ReactNode }) {
-  return <span className="block text-[11px] leading-[17px] font-semibold text-ink mb-[6px]">{children}</span>
+  return <span className="block text-[13px] leading-[20px] font-semibold text-ink mb-[6px]">{children}</span>
 }
 
-const inputBase = 'w-full bg-white border text-[11px] tracking-[-0.2px] text-ink outline-none transition-colors placeholder:text-[#9a9fa1]'
+const inputBase = 'w-full bg-white border text-[13px] tracking-[-0.2px] text-ink outline-none transition-colors placeholder:text-[#9a9fa1]'
 
 // Inputs stay neutral by default; the brand border only marks the field being edited.
 export function inputClass() {
@@ -195,7 +195,7 @@ export function PickerInput({ icon, type, value, onChange, label, tour, error }:
         value={value}
         onChange={e => onChange(e.target.value)}
         aria-label={label}
-        className={cx('flex-1 min-w-0 bg-transparent outline-none text-[11px] cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden', value ? 'text-ink' : 'text-[#9a9fa1]')}
+        className={cx('flex-1 min-w-0 bg-transparent outline-none text-[13px] cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden', value ? 'text-ink' : 'text-[#9a9fa1]')}
       />
     </label>
   )
@@ -233,7 +233,7 @@ export function Segmented<T extends string>({ value, options, onChange, size = '
           onClick={() => onChange(o)}
           className={cx(
             'transition-colors font-medium tracking-[-0.1px]',
-            size === 'sm' ? 'text-[9px] px-[8px] h-[24px]' : 'text-[10px] px-[12px] h-[28px]',
+            size === 'sm' ? 'text-[11px] px-[8px] h-[24px]' : 'text-[12px] px-[12px] h-[28px]',
             full && 'flex-1',
             value === o ? 'bg-brand text-ink shadow-[0_1px_0_rgba(0,0,0,.04)]' : 'text-[#505557] hover:text-ink',
           )}
@@ -273,8 +273,8 @@ export function SectionTitle({ title, caption, right, icon }: { title: string; c
     <div className="flex items-center gap-[10px]">
       <SectionIcon name={icon} />
       <div className="flex-1">
-        <p className="text-[13px] leading-[20px] font-semibold tracking-[-0.1px] text-ink">{title}</p>
-        <p className="pt-[2px] text-[10px] leading-[15px] text-[#666b6e] tracking-[-0.2px]">{caption}</p>
+        <p className="text-[15px] leading-[22px] font-semibold tracking-[-0.1px] text-ink">{title}</p>
+        <p className="pt-[2px] text-[12px] leading-[18px] text-[#666b6e] tracking-[-0.2px]">{caption}</p>
       </div>
       {right}
     </div>
@@ -284,11 +284,11 @@ export function SectionTitle({ title, caption, right, icon }: { title: string; c
 /* ---------- Table helpers ---------- */
 
 export function Th({ children, className }: { children?: ReactNode; className?: string }) {
-  return <th className={cx('h-[43px] px-[12px] text-left font-fono font-bold text-[10px] leading-[15px] tracking-[-0.2px] text-[#24282a] border-b border-[#e2e3e3] bg-white', className)}>{children}</th>
+  return <th className={cx('h-[43px] px-[12px] text-left font-fono font-bold text-[12px] leading-[18px] tracking-[-0.2px] text-[#24282a] border-b border-[#e2e3e3] bg-white', className)}>{children}</th>
 }
 
 export function Td({ children, className }: { children?: ReactNode; className?: string }) {
-  return <td className={cx('px-[12px] py-[9px] border-b border-[#e2e3e3] text-[11px] leading-[17px] tracking-[-0.2px] text-[#3e4345]', className)}>{children}</td>
+  return <td className={cx('px-[12px] py-[9px] border-b border-[#e2e3e3] text-[13px] leading-[20px] tracking-[-0.2px] text-[#3e4345]', className)}>{children}</td>
 }
 
 export function Pagination({ page, pageSize, total, onPage, noun }: { page: number; pageSize: number; total: number; onPage: (p: number) => void; noun: string }) {
@@ -297,7 +297,7 @@ export function Pagination({ page, pageSize, total, onPage, noun }: { page: numb
   const to = Math.min(total, page * pageSize)
   return (
     <div className="flex items-center justify-between min-h-[52px] px-[16px] py-[8px] border-t border-[#e7e7e7] bg-white">
-      <p className="text-[12px] leading-[16px] font-semibold text-[#71717a]">
+      <p className="text-[14px] leading-[19px] font-semibold text-[#71717a]">
         {total === 0 ? t(`No ${noun} match your filters`, `Ningún resultado coincide con los filtros`) : t(`Showing ${from} to ${to} of ${total} ${noun}`, `Mostrando ${from} a ${to} de ${total} ${noun}`)}
       </p>
       <div className="flex items-center gap-[4px]">
@@ -305,7 +305,7 @@ export function Pagination({ page, pageSize, total, onPage, noun }: { page: numb
           <ChevronLeft size={16} />
         </button>
         {Array.from({ length: pages }, (_, i) => i + 1).map(p => (
-          <button key={p} onClick={() => onPage(p)} className={cx('grid place-items-center size-[28px] rounded-[6px] text-[12px] font-semibold', p === page ? 'bg-[#ccfbff] text-ink' : 'text-[#71717a] hover:bg-black/5')}>
+          <button key={p} onClick={() => onPage(p)} className={cx('grid place-items-center size-[28px] rounded-[6px] text-[14px] font-semibold', p === page ? 'bg-[#ccfbff] text-ink' : 'text-[#71717a] hover:bg-black/5')}>
             {p}
           </button>
         ))}
@@ -318,5 +318,5 @@ export function Pagination({ page, pageSize, total, onPage, noun }: { page: numb
 }
 
 export function AssetMark({ name }: { name: string }) {
-  return <span className="grid place-items-center size-[28px] bg-brand text-[10px] font-extrabold text-[#171a1c] shrink-0">{name[0]}</span>
+  return <span className="grid place-items-center size-[28px] bg-brand text-[12px] font-extrabold text-[#171a1c] shrink-0">{name[0]}</span>
 }

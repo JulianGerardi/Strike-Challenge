@@ -44,7 +44,7 @@ export function Sidebar({ onHome }: { onHome: () => void }) {
         ))}
       </nav>
       <div className="mt-auto flex justify-center pt-[15px] border-t border-[#303335]">
-        <span className="grid place-items-center size-[40px] rounded-full border-2 border-brand text-white text-[11px] font-medium">AC</span>
+        <span className="grid place-items-center size-[40px] rounded-full border-2 border-brand text-white text-[13px] font-medium">AC</span>
       </div>
       </div>
     </aside>
@@ -91,7 +91,7 @@ function useIntro(key: unknown, ms = 2200) {
 /** EN / ES switch shown in the header. */
 function LangSwitch({ lang, onChange }: { lang: Lang; onChange: (l: Lang) => void }) {
   return (
-    <div role="radiogroup" aria-label={t('Language', 'Idioma')} className="relative grid grid-cols-2 h-[28px] p-[2px] bg-[#f0f1f1] font-fono text-[10px] font-medium tracking-[0.3px]">
+    <div role="radiogroup" aria-label={t('Language', 'Idioma')} className="relative grid grid-cols-2 h-[28px] p-[2px] bg-[#f0f1f1] font-fono text-[12px] font-medium tracking-[0.3px]">
       <span className="absolute top-[2px] bottom-[2px] left-[2px] w-[calc(50%-2px)] bg-brand transition-transform duration-300 ease-[cubic-bezier(.3,1.3,.5,1)]" style={{ transform: lang === 'es' ? 'translateX(100%)' : 'none' }} />
       {(['en', 'es'] as const).map(l => (
         <button key={l} role="radio" aria-checked={lang === l} onClick={() => onChange(l)} className={cx('relative z-10 w-[32px] uppercase transition-colors', lang === l ? 'text-ink' : 'text-[#73787a] hover:text-ink')}>
@@ -110,12 +110,12 @@ export function Header({ happy, onSmiley, introKey, lang, onLang }: { happy?: bo
       <div className="flex items-center gap-[8px] md:gap-[5px]">
         <span className="md:hidden grid place-items-center size-[32px] bg-[#111315]"><StrikeLogo size={16} /></span>
         <Smiley happy={happy} intro={intro} onClick={onSmiley} />
-        <span key={`${introKey}-${lang}`} className="greet font-fono font-medium text-[14px] leading-[20px] text-[#09090b] whitespace-nowrap" style={{ animationTimingFunction: `steps(${greeting.length})` }}>{greeting}</span>
+        <span key={`${introKey}-${lang}`} className="greet font-fono font-medium text-[14px] leading-[22px] text-[#09090b] whitespace-nowrap" style={{ animationTimingFunction: `steps(${greeting.length})` }}>{greeting}</span>
       </div>
       <div className="flex items-center gap-[12px] sm:gap-[18px]">
       <LangSwitch lang={lang} onChange={onLang} />
       <button className="flex items-center gap-[8px] h-[36px]">
-        <span className="grid place-items-center size-[24px] bg-brand text-[9px] font-bold text-[#142f31]">JA</span>
+        <span className="grid place-items-center size-[24px] bg-brand text-[11px] font-bold text-[#142f31]">JA</span>
         <span className="hidden sm:inline text-[14px] font-medium tracking-[-0.2px] text-ink">Jordan Avery</span>
         <ChevronDown size={13} className="text-[#73787a]" />
       </button>

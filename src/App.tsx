@@ -254,7 +254,7 @@ export default function App() {
 
         <div key={screen} className="fade-up flex flex-col gap-[18px]">
           {returnTo && stepIndex >= 0 && (
-            <div className="flex items-center gap-[10px] px-[14px] py-[10px] bg-[#eefafa] border border-[#cbe9ea] text-[11px] text-[#285b5e]">
+            <div className="flex items-center gap-[10px] px-[14px] py-[10px] bg-[#eefafa] border border-[#cbe9ea] text-[13px] text-[#285b5e]">
               <span className="font-semibold">{returnTo === 'review' ? t('Editing from Review.', 'Editando desde la revisión.') : t('Editing from Configure.', 'Editando desde Configurar.')}</span>
               <span>{t("Save your changes to go straight back. You won't need to repeat the other steps.", 'Guardá los cambios para volver directo. No vas a tener que repetir los otros pasos.')}</span>
             </div>
@@ -286,7 +286,7 @@ export default function App() {
                 tourId="continue"
                 extra={
                   stepIndex > 0 && (
-                    <button data-tour="discard" onClick={() => setDiscarding(true)} className="inline-flex items-center gap-[6px] h-[40px] px-[4px] text-[10px] font-bold uppercase tracking-[0.3px] text-[#b23a3a] hover:text-[#8f2424]">
+                    <button data-tour="discard" onClick={() => setDiscarding(true)} className="inline-flex items-center gap-[6px] h-[40px] px-[4px] text-[12px] font-bold uppercase tracking-[0.3px] text-[#b23a3a] hover:text-[#8f2424]">
                       <Trash2 size={14} strokeWidth={1.9} />
                       {t('Cancel exercise', 'Cancelar ejercicio')}
                     </button>
@@ -309,7 +309,7 @@ export default function App() {
       <AssistantLauncher open={chatOpen} hidden={!!tour || !!bulk || !!drawer || discarding} dock={dock} setDock={setDock} onClose={() => setChatOpen(false)} onToggle={() => setChatOpen(!chatOpen)} />
 
       {toast && (
-        <div role="status" className="fade-up fixed z-40 bottom-[16px] left-[12px] md:left-[112px] flex items-center gap-[10px] w-[min(344px,calc(100vw-24px))] min-h-[37px] py-[8px] px-[12px] bg-[#e8f8ef] border border-[#c4ecd6] text-[11px] font-semibold">
+        <div role="status" className="fade-up fixed z-40 bottom-[16px] left-[12px] md:left-[112px] flex items-center gap-[10px] w-[min(344px,calc(100vw-24px))] min-h-[37px] py-[8px] px-[12px] bg-[#e8f8ef] border border-[#c4ecd6] text-[13px] font-semibold">
           <Check size={15} />
           <span className="flex-1">{toast}</span>
           <button onClick={() => setToast(null)} aria-label={t('Close', 'Cerrar')}><X size={15} /></button>
@@ -352,7 +352,7 @@ export default function App() {
             </>
           }
         >
-          <p className="text-[11px] leading-[17px] text-[#3e4345]">
+          <p className="text-[13px] leading-[20px] text-[#3e4345]">
             {t(`You will lose the details, the ${selected.length} selected ${selected.length === 1 ? 'asset' : 'assets'} and any custom settings. Nothing has been created yet.`, `Vas a perder los detalles, ${selected.length === 1 ? 'el asset seleccionado' : `los ${selected.length} assets seleccionados`} y la configuración personalizada. Todavía no se creó nada.`)}
           </p>
         </Modal>

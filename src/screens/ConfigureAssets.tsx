@@ -76,8 +76,8 @@ export function Modal({ title, caption, children, onClose, footer, tourId }: { t
     <div className="fixed inset-0 z-40 bg-[#111315]/40 grid place-items-center p-[12px] sm:p-[24px]" onMouseDown={e => e.target === e.currentTarget && onClose()}>
       <div data-tour={tourId} role="dialog" aria-modal="true" aria-label={title} className="fade-up w-full max-w-[620px] max-h-[calc(100vh-48px)] flex flex-col bg-white shadow-[0_24px_64px_rgba(17,19,21,.25)]">
         <div className="relative px-[16px] sm:px-[24px] pt-[24px] pb-[20px] bg-[#f7f7f7] border-b border-[#e5e5e5]">
-          <h2 className="text-[18px] leading-[24px] font-medium">{title}</h2>
-          <p className="mt-[6px] text-[11px] text-[#666b6e]">{caption}</p>
+          <h2 className="text-[20px] leading-[26px] font-medium">{title}</h2>
+          <p className="mt-[6px] text-[13px] text-[#666b6e]">{caption}</p>
           <button onClick={onClose} aria-label={t('Close', 'Cerrar')} className="absolute right-[22px] top-[24px] text-[#505557] hover:text-ink"><X size={18} /></button>
         </div>
         <div className="overflow-auto px-[16px] sm:px-[24px] py-[18px]">{children}</div>
@@ -106,8 +106,8 @@ export function BulkEditModal({ count, shared, changes, setChanges, onClose, onS
             <div key={f} className="py-[14px] flex flex-col gap-[12px]">
               <div className="flex flex-wrap sm:flex-nowrap items-start justify-between gap-[12px]">
                 <div>
-                  <p className="text-[12px] font-semibold">{fieldLabel(f)}</p>
-                  <p className="mt-[6px] text-[9px] text-[#969a9c]">{hint}</p>
+                  <p className="text-[14px] font-semibold">{fieldLabel(f)}</p>
+                  <p className="mt-[6px] text-[11px] text-[#969a9c]">{hint}</p>
                 </div>
                 <span data-tour={`bulk-mode-${f}`} className="inline-flex"><Segmented size="sm" value={c.mode} options={['Keep current', 'Apply new', 'Reset'] as const} onChange={m => setChanges({ ...changes, [f]: { ...c, mode: m } })} /></span>
               </div>
@@ -148,15 +148,15 @@ export function ConfirmBulkModal({ assets, lines, onClose, onSave }: { assets: A
       onClose={onClose}
       footer={<><Button variant="ghost" className="w-[108px] h-[40px]" onClick={onClose}>{t('Cancel', 'Cancelar')}</Button><Button data-tour="confirm-save" className="h-[40px] px-[16px]" onClick={onSave}>{t('Save changes', 'Guardar cambios')}</Button></>}
     >
-      <div className="flex gap-[10px] px-[14px] py-[10px] bg-[#fff6e9] text-[11px] leading-[17px] text-[#8a4b0f]">
+      <div className="flex gap-[10px] px-[14px] py-[10px] bg-[#fff6e9] text-[13px] leading-[20px] text-[#8a4b0f]">
         <TriangleAlert size={16} className="shrink-0 mt-[1px]" />
         <p><b>{t(`This action updates ${assets.length} ${assets.length === 1 ? 'asset' : 'assets'}.`, `Esta acción actualiza ${assets.length} ${assets.length === 1 ? 'asset' : 'assets'}.`)}</b> {t('Existing custom values in the fields below will be replaced. Unchanged fields and credentials will not be affected.', 'Se reemplazan los valores personalizados de estos campos. Los demás campos y las credenciales no cambian.')}</p>
       </div>
-      <p className="mt-[18px] mb-[10px] text-[11px] font-semibold">{t('Fields to update', 'Campos a actualizar')}</p>
+      <p className="mt-[18px] mb-[10px] text-[13px] font-semibold">{t('Fields to update', 'Campos a actualizar')}</p>
       <ul className="flex flex-col gap-[9px]">
-        {lines.map(l => <li key={l} className="flex items-center gap-[8px] text-[11px] text-[#3e4345]"><Check size={14} className="text-[#1f9d6b]" />{l}</li>)}
+        {lines.map(l => <li key={l} className="flex items-center gap-[8px] text-[13px] text-[#3e4345]"><Check size={14} className="text-[#1f9d6b]" />{l}</li>)}
       </ul>
-      <p className="mt-[18px] mb-[10px] text-[11px] font-semibold">{t('Affected assets', 'Assets afectados')}</p>
+      <p className="mt-[18px] mb-[10px] text-[13px] font-semibold">{t('Affected assets', 'Assets afectados')}</p>
       <div className="flex flex-col items-start gap-[8px]">
         {types.map(type => <Badge key={type} tone="type">{tv(type)} · {assets.filter(a => a.type === type).length}</Badge>)}
       </div>
@@ -194,24 +194,24 @@ export function AssetDrawer({ asset, shared, overrides, onClose, onSave }: { ass
       <div className="absolute inset-0 bg-[#111315]/25 pointer-events-none" />
       <aside data-tour="drawer" role="dialog" aria-label={`${t('Asset configuration', 'Configuración del asset')} ${asset.name}`} className="slide-in absolute right-0 top-0 h-full w-full max-w-[404px] bg-white flex flex-col shadow-[-12px_0_40px_rgba(17,19,21,.15)]">
         <div className="relative px-[22px] pt-[30px] pb-[20px] bg-[#f7f7f7] border-b border-[#e5e5e5]">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.3px] text-[#3e4345]">{t('Asset configuration', 'Configuración del asset')}</p>
-          <h2 className="mt-[6px] text-[18px] leading-[24px] font-medium">{asset.name}</h2>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.3px] text-[#3e4345]">{t('Asset configuration', 'Configuración del asset')}</p>
+          <h2 className="mt-[6px] text-[20px] leading-[26px] font-medium">{asset.name}</h2>
           <button onClick={onClose} aria-label={t('Close', 'Cerrar')} className="absolute right-[22px] top-[30px] text-[#505557] hover:text-ink"><X size={18} /></button>
         </div>
         <div className="flex-1 overflow-auto px-[22px] py-[24px]">
           <div className="flex items-center gap-[12px] px-[16px] py-[12px] bg-[#f6f7f7] border-l-[3px] border-brand">
             <span className="grid place-items-center size-[40px] bg-brand text-[14px] font-bold text-[#3e4345]">{asset.name[0]}</span>
             <div>
-              <p className="text-[11px] font-bold">{asset.name}</p>
-              <p className="mt-[3px] text-[10px] text-[#666b6e]">{tv(asset.type)} · {tv(asset.environment)}</p>
-              <p className="mt-[3px] font-code text-[9px] text-[#969a9c]">{asset.identifier}</p>
+              <p className="text-[13px] font-bold">{asset.name}</p>
+              <p className="mt-[3px] text-[12px] text-[#666b6e]">{tv(asset.type)} · {tv(asset.environment)}</p>
+              <p className="mt-[3px] font-code text-[11px] text-[#969a9c]">{asset.identifier}</p>
             </div>
           </div>
           {FIELDS.map(f => {
             const custom = local[f] !== undefined
             return (
               <div key={f} className="py-[20px] border-b border-[#e5e5e5] flex flex-col gap-[16px]">
-                <p className="text-[12px] font-semibold">{f === 'vpnRequired' ? t('VPN access', 'Acceso por VPN') : fieldLabel(f)}</p>
+                <p className="text-[14px] font-semibold">{f === 'vpnRequired' ? t('VPN access', 'Acceso por VPN') : fieldLabel(f)}</p>
                 <div className="flex items-center gap-[20px] pl-[10px]">
                   <Checkbox checked={!custom} onChange={() => setCustom(f, false)} label={inheritText[f]} />
                   <span data-tour={`drawer-custom-${f}`} className="inline-flex"><Checkbox checked={custom} onChange={() => setCustom(f, true)} label={t('Set custom value', 'Valor personalizado')} /></span>
@@ -249,7 +249,7 @@ function Val({ children, custom }: { children: React.ReactNode; custom: boolean 
   return (
     <div>
       <p>{children}</p>
-      {custom && <p className="flex items-center gap-[4px] text-[8px] font-semibold text-[#17575a] mt-[1px]"><span className="size-[5px] rounded-full bg-[#2bb9bd]" />{t('Custom override', 'Valor personalizado')}</p>}
+      {custom && <p className="flex items-center gap-[4px] text-[10px] font-semibold text-[#17575a] mt-[1px]"><span className="size-[5px] rounded-full bg-[#2bb9bd]" />{t('Custom override', 'Valor personalizado')}</p>}
     </div>
   )
 }
@@ -279,7 +279,7 @@ export function ConfigureAssets({
           <div className="relative group">
             <Button data-tour="add-setting" variant="outline" onClick={onAddSetting} disabled={checked.length === 0} icon={<SlidersHorizontal size={15} strokeWidth={1.75} />}>{t('Add setting', 'Editar configuración')}</Button>
             {checked.length === 0 && (
-              <span className="pointer-events-none absolute right-0 top-[42px] z-10 w-[220px] px-[10px] py-[8px] bg-ink text-white text-[10px] leading-[14px] opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="pointer-events-none absolute right-0 top-[42px] z-10 w-[220px] px-[10px] py-[8px] bg-ink text-white text-[12px] leading-[17px] opacity-0 group-hover:opacity-100 transition-opacity">
                 {t('Select one or more assets in the table to edit their settings together.', 'Seleccioná uno o más assets de la tabla para editarlos juntos.')}
               </span>
             )}
@@ -290,7 +290,7 @@ export function ConfigureAssets({
       <div data-tour="defaults" className="flex flex-wrap lg:flex-nowrap items-center gap-x-[18px] gap-y-[12px] px-[16px] py-[14px] bg-[#f7f7f7] border border-[#e2e3e3]">
         <div className="flex items-center gap-[10px] pr-[24px] lg:border-r border-[#dcdcdc] basis-full lg:basis-auto">
           <span className="section-icon grid place-items-center size-[30px] bg-brand"><PixelIcon name="sliders" size={18} /></span>
-          <span className="text-[10px] font-bold">{t('Exercise defaults', 'Valores del ejercicio')}</span>
+          <span className="text-[12px] font-bold">{t('Exercise defaults', 'Valores del ejercicio')}</span>
         </div>
         {[
           [t('Test depth', 'Profundidad'), tv(draft.depth)],
@@ -299,8 +299,8 @@ export function ConfigureAssets({
           [t('Testing window', 'Ventana de testing'), windowText(shared.window)],
         ].map(([k, v], i) => (
           <div key={k} className={cx('flex-1 min-w-[120px] pr-[14px]', i < 3 && 'lg:border-r border-[#dcdcdc]')}>
-            <p className="text-[8px] uppercase tracking-[0.4px] text-[#73787a]">{k}</p>
-            <p className="mt-[4px] text-[10px] font-semibold truncate">{v}</p>
+            <p className="text-[10px] uppercase tracking-[0.4px] text-[#73787a]">{k}</p>
+            <p className="mt-[4px] text-[12px] font-semibold truncate">{v}</p>
           </div>
         ))}
         <button onClick={onEditDefaults} aria-label={t('Edit exercise defaults', 'Editar valores del ejercicio')} className="grid place-items-center size-[30px] hover:bg-black/5"><Pencil size={17} /></button>
@@ -310,7 +310,7 @@ export function ConfigureAssets({
         api={api}
         groups={GROUPS}
         placeholder={t('Search assets', 'Buscar assets')}
-        right={checked.length > 0 && <span className="text-[11px] font-semibold text-[#17575a]">{t(`${checked.length} selected for bulk edit`, `${checked.length} ${checked.length === 1 ? 'seleccionado' : 'seleccionados'} para edición masiva`)}</span>}
+        right={checked.length > 0 && <span className="text-[13px] font-semibold text-[#17575a]">{t(`${checked.length} selected for bulk edit`, `${checked.length} ${checked.length === 1 ? 'seleccionado' : 'seleccionados'} para edición masiva`)}</span>}
       />
 
       <div data-tour="config-table" className="bg-white border border-[#e5e5e5] rounded-[6px] overflow-hidden">
@@ -340,7 +340,7 @@ export function ConfigureAssets({
                       <AssetMark name={r.name} />
                       <div>
                         <p className="font-bold text-ink">{r.name}</p>
-                        <p className="text-[9px] leading-[14px] text-[#969a9c]">{r.identifier}</p>
+                        <p className="text-[11px] leading-[17px] text-[#969a9c]">{r.identifier}</p>
                       </div>
                     </div>
                   </Td>
@@ -357,7 +357,7 @@ export function ConfigureAssets({
               )
             })}
             {api.filtered.length === 0 && (
-              <tr><td colSpan={9} className="py-[28px] text-center text-[11px] text-[#969a9c]">{t('No assets match your filters.', 'Ningún asset coincide con los filtros.')}</td></tr>
+              <tr><td colSpan={9} className="py-[28px] text-center text-[13px] text-[#969a9c]">{t('No assets match your filters.', 'Ningún asset coincide con los filtros.')}</td></tr>
             )}
           </tbody>
         </table>

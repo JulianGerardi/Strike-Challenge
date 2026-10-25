@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { ArrowRight, Bot, MapPin, MousePointerClick, Send, X } from 'lucide-react'
+import { ArrowLeftToLine, ArrowRight, ArrowRightToLine, Bot, MapPin, MousePointerClick, Send, X } from 'lucide-react'
 import { STEPS, cx } from './ui'
 import { getLang, t, tv } from '../i18n'
 
@@ -215,25 +215,25 @@ export function TourOverlay({ step, index, total, onNext, onPrev, onClose, onTar
       )}
       <div ref={cardRef} className="tour-card absolute pointer-events-auto bg-white shadow-[0_18px_48px_rgba(0,0,0,.28)] fade-up" style={{ top, left, width: W }} role="dialog" aria-label={step.title}>
         <div className="flex items-center justify-between px-[14px] pt-[12px]">
-          <span className="text-[9px] uppercase tracking-[0.6px] text-[#2b9ea2] font-bold">{t(`Step ${index + 1} of ${total}`, `Paso ${index + 1} de ${total}`)}</span>
+          <span className="text-[11px] uppercase tracking-[0.6px] text-[#2b9ea2] font-bold">{t(`Step ${index + 1} of ${total}`, `Paso ${index + 1} de ${total}`)}</span>
           <button onClick={onClose} aria-label={t('Close tour', 'Cerrar tour')} className="text-[#73787a] hover:text-ink"><X size={15} /></button>
         </div>
         <div className="h-[3px] mx-[14px] mt-[8px] bg-[#eef0f0]">
           <div className="h-full bg-brand transition-all duration-300" style={{ width: `${((index + 1) / total) * 100}%` }} />
         </div>
         <div className="px-[14px] pt-[10px] pb-[12px]">
-          <p className="text-[13px] font-semibold">{step.title}</p>
-          <p className="mt-[4px] text-[11px] leading-[16px] text-[#505557]">{step.text}</p>
+          <p className="text-[15px] font-semibold">{step.title}</p>
+          <p className="mt-[4px] text-[13px] leading-[19px] text-[#505557]">{step.text}</p>
           {step.click && rect && (
-            <p className="mt-[8px] flex items-center gap-[5px] text-[10px] font-semibold text-[#17575a]"><MousePointerClick size={12} />{t('Click the highlighted control to continue', 'Hacé clic en lo resaltado para seguir')}</p>
+            <p className="mt-[8px] flex items-center gap-[5px] text-[12px] font-semibold text-[#17575a]"><MousePointerClick size={12} />{t('Click the highlighted control to continue', 'Hacé clic en lo resaltado para seguir')}</p>
           )}
           {!rect && (
-            <p className="mt-[8px] text-[10px] text-[#a0631a]">{t('This element is not visible right now. Go back a step to bring it up.', 'Este elemento no está visible ahora. Volvé un paso atrás para hacerlo aparecer.')}</p>
+            <p className="mt-[8px] text-[12px] text-[#a0631a]">{t('This element is not visible right now. Go back a step to bring it up.', 'Este elemento no está visible ahora. Volvé un paso atrás para hacerlo aparecer.')}</p>
           )}
         </div>
         <div className="flex items-center justify-between px-[10px] py-[8px] bg-[#f7f7f7]">
-          <button onClick={onPrev} disabled={index === 0} className="h-[28px] px-[10px] text-[10px] font-bold uppercase tracking-[0.3px] disabled:opacity-30">{t('Back', 'Atrás')}</button>
-          <button onClick={onNext} className="inline-flex items-center gap-[6px] h-[28px] px-[12px] bg-brand border border-brand-border text-[10px] font-bold uppercase tracking-[0.3px]">
+          <button onClick={onPrev} disabled={index === 0} className="h-[28px] px-[10px] text-[12px] font-bold uppercase tracking-[0.3px] disabled:opacity-30">{t('Back', 'Atrás')}</button>
+          <button onClick={onNext} className="inline-flex items-center gap-[6px] h-[28px] px-[12px] bg-brand border border-brand-border text-[12px] font-bold uppercase tracking-[0.3px]">
             {index + 1 === total ? t('Finish', 'Terminar') : t('Next', 'Siguiente')} <ArrowRight size={13} />
           </button>
         </div>
@@ -272,8 +272,8 @@ function GuideCard({ guide, screen, tourIndex, onStart, onJump }: { guide: Guide
   return (
     <div className="bg-white border border-[#e5e5e5] w-full">
       <div className="px-[12px] pt-[10px] pb-[8px]">
-        <p className="text-[12px] font-semibold">{g.title}</p>
-        <p className="mt-[4px] text-[10.5px] leading-[15px] text-[#505557]">{g.intro}</p>
+        <p className="text-[14px] font-semibold">{g.title}</p>
+        <p className="mt-[4px] text-[12px] leading-[18px] text-[#505557]">{g.intro}</p>
       </div>
       <ol className="px-[6px] pb-[6px]">
         {g.steps.map((s, i) => {
@@ -285,17 +285,17 @@ function GuideCard({ guide, screen, tourIndex, onStart, onJump }: { guide: Guide
                 onClick={() => onJump(i)}
                 className={cx('w-full flex items-start gap-[8px] px-[6px] py-[5px] text-left transition-colors', active ? 'bg-brand' : isHere ? 'bg-brand-soft' : 'hover:bg-[#f5f5f5]')}
               >
-                <span className={cx('grid place-items-center size-[16px] shrink-0 text-[8px] font-bold mt-[1px]', active || isHere ? 'bg-ink text-white' : 'bg-[#eef0f0] text-[#505557]')}>{i + 1}</span>
-                <span className="text-[10.5px] leading-[15px]">
+                <span className={cx('grid place-items-center size-[16px] shrink-0 text-[10px] font-bold mt-[1px]', active || isHere ? 'bg-ink text-white' : 'bg-[#eef0f0] text-[#505557]')}>{i + 1}</span>
+                <span className="text-[12px] leading-[18px]">
                   {s.title}
-                  {(active || (isHere && i === here)) && <span className="ml-[6px] inline-flex items-center gap-[2px] text-[9px] font-bold text-[#17575a]"><MapPin size={9} />{active ? t('in progress', 'en curso') : t('you are here', 'estás acá')}</span>}
+                  {(active || (isHere && i === here)) && <span className="ml-[6px] inline-flex items-center gap-[2px] text-[11px] font-bold text-[#17575a]"><MapPin size={9} />{active ? t('in progress', 'en curso') : t('you are here', 'estás acá')}</span>}
                 </span>
               </button>
             </li>
           )
         })}
       </ol>
-      <button onClick={onStart} className="w-full h-[34px] flex items-center justify-center gap-[6px] bg-ink text-white text-[10px] font-bold uppercase tracking-[0.4px] hover:bg-[#24282a]">
+      <button onClick={onStart} className="w-full h-[34px] flex items-center justify-center gap-[6px] bg-ink text-white text-[12px] font-bold uppercase tracking-[0.4px] hover:bg-[#24282a]">
         {here >= 0 ? t('Show me from where I am', 'Mostrarme desde donde estoy') : t('Start tour', 'Iniciar tour')} <ArrowRight size={13} />
       </button>
     </div>
@@ -387,15 +387,15 @@ export function Assistant({
           <div className="flex items-center gap-[10px] px-[14px] h-[54px] bg-[#111315] text-white shrink-0">
             <span className="grid place-items-center size-[30px] bg-brand text-ink"><Bot size={17} /></span>
             <div className="flex-1">
-              <p className="text-[12px] font-semibold">Strike Assistant</p>
-              <p className="text-[10px] text-[#9fe9eb]">{t('I’ll guide you step by step', 'Te guío paso a paso')}</p>
+              <p className="text-[14px] font-semibold">Strike Assistant</p>
+              <p className="text-[12px] text-[#9fe9eb]">{t('I’ll guide you step by step', 'Te guío paso a paso')}</p>
             </div>
             <button onClick={() => setOpen(false)} aria-label={t('Close', 'Cerrar')} className="text-[#c9cccd] hover:text-white"><X size={16} /></button>
           </div>
 
           <div className="px-[14px] py-[9px] bg-white border-b border-[#ececec] shrink-0">
-            <p className="flex items-center gap-[5px] text-[9px] uppercase tracking-[0.5px] text-[#73787a]"><MapPin size={10} className="text-[#2b9ea2]" />{t('You are on', 'Estás en')}</p>
-            <p className="mt-[2px] text-[11px] font-semibold">{screenLabel(screen)}</p>
+            <p className="flex items-center gap-[5px] text-[11px] uppercase tracking-[0.5px] text-[#73787a]"><MapPin size={10} className="text-[#2b9ea2]" />{t('You are on', 'Estás en')}</p>
+            <p className="mt-[2px] text-[13px] font-semibold">{screenLabel(screen)}</p>
             <div className="mt-[6px] flex gap-[3px]">
               {STEPS.map((s, i) => (
                 <span key={s} title={tv(s)} className={cx('h-[4px] flex-1 transition-colors duration-300', stepIdx === undefined ? (screen === 'created' ? 'bg-brand-dark' : 'bg-[#e5e7e7]') : i < stepIdx ? 'bg-brand-dark' : i === stepIdx ? 'bg-brand' : 'bg-[#e5e7e7]')} />
@@ -416,7 +416,7 @@ export function Assistant({
                   />
                 </div>
               ) : (
-                <div key={m.id} className={cx('fade-up max-w-[85%] px-[11px] py-[8px] text-[11px] leading-[16px]', m.from === 'user' ? 'self-end bg-ink text-white' : 'self-start bg-white border border-[#e5e5e5]')}>
+                <div key={m.id} className={cx('fade-up max-w-[85%] px-[11px] py-[8px] text-[13px] leading-[19px]', m.from === 'user' ? 'self-end bg-ink text-white' : 'self-start bg-white border border-[#e5e5e5]')}>
                   {'say' in m ? m.say() : m.text}
                 </div>
               ),
@@ -430,11 +430,11 @@ export function Assistant({
 
           <div className="px-[10px] pt-[8px] flex gap-[5px] overflow-x-auto shrink-0 [scrollbar-width:none]">
             {quick().map(q => (
-              <button key={q} onClick={() => reply(q)} className="shrink-0 h-[24px] px-[9px] bg-white border border-[#bde7e9] text-[10px] text-[#17575a] hover:bg-brand-soft whitespace-nowrap">{q}</button>
+              <button key={q} onClick={() => reply(q)} className="shrink-0 h-[24px] px-[9px] bg-white border border-[#bde7e9] text-[12px] text-[#17575a] hover:bg-brand-soft whitespace-nowrap">{q}</button>
             ))}
           </div>
           <form onSubmit={e => { e.preventDefault(); send() }} className="flex items-center gap-[6px] m-[10px] h-[38px] px-[10px] bg-white border border-[#dcdcdc] focus-within:border-[#2bb9bd] shrink-0">
-            <input value={input} onChange={e => setInput(e.target.value)} placeholder={t('Type your question…', 'Escribí tu pregunta…')} className="flex-1 bg-transparent outline-none text-[11px]" />
+            <input value={input} onChange={e => setInput(e.target.value)} placeholder={t('Type your question…', 'Escribí tu pregunta…')} className="flex-1 bg-transparent outline-none text-[13px]" />
             <button type="submit" aria-label={t('Send', 'Enviar')} disabled={!input.trim()} className="grid place-items-center size-[26px] bg-brand disabled:opacity-40"><Send size={13} /></button>
           </form>
         </div>
@@ -618,14 +618,19 @@ export function AssistantLauncher({ open, onToggle, onClose, hidden, dock, setDo
         <span key={open ? 'x' : 'bot'} className="bot-swap grid place-items-center">{open ? <X size={22} /> : <BotFace />}</span>
       </button>
       {!drag && (
-        <button
-          onClick={() => { onClose(); setDock({ ...dock, tucked: true }) }}
-          aria-label={t('Hide assistant', 'Ocultar asistente')}
-          title={t('Hide assistant', 'Ocultar asistente')}
-          className={cx('absolute -top-[4px] grid place-items-center size-[20px] rounded-full bg-ink text-white opacity-0 group-hover:opacity-100 focus:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity', dock.side === 'right' ? '-left-[4px]' : '-right-[4px]')}
-        >
-          <X size={11} strokeWidth={2.5} />
-        </button>
+        // "Send to the edge" control: tucks the launcher into a tab on its side of the screen.
+        <div className={cx('absolute -top-[6px] opacity-0 group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity', dock.side === 'right' ? '-left-[6px]' : '-right-[6px]')}>
+          <button
+            onClick={() => { onClose(); setDock({ ...dock, tucked: true }) }}
+            aria-label={t('Hide assistant', 'Ocultar asistente')}
+            className="peer grid place-items-center size-[24px] rounded-full bg-ink text-white shadow-[0_2px_6px_rgba(17,19,21,.25)] hover:bg-[#2b3033]"
+          >
+            {dock.side === 'right' ? <ArrowRightToLine size={13} strokeWidth={2.2} /> : <ArrowLeftToLine size={13} strokeWidth={2.2} />}
+          </button>
+          <span role="tooltip" className={cx('pointer-events-none absolute top-1/2 -translate-y-1/2 whitespace-nowrap px-[8px] py-[5px] bg-ink text-white text-[12px] font-medium opacity-0 peer-hover:opacity-100 peer-focus-visible:opacity-100 transition-opacity', dock.side === 'right' ? 'right-[30px]' : 'left-[30px]')}>
+            {t('Hide assistant', 'Ocultar asistente')}
+          </span>
+        </div>
       )}
     </div>
   )
