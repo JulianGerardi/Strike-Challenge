@@ -85,13 +85,13 @@ export const INITIAL_EXERCISES: Exercise[] = [
   { id: 'EX-1984', name: 'Payments Perimeter Assessment', updated: 2, assets: 3, schedule: '2026-05-24', status: 'Complete' },
   { id: 'EX-1941', name: 'Payments Perimeter Assessment', updated: '2025-09-18', assets: 7, schedule: '2026-05-24', status: 'Complete' },
   { id: 'EX-1937', name: 'Customer Identity Review', updated: 2, assets: 4, schedule: '2026-05-24', status: 'Complete' },
-  { id: 'EX-1922', name: 'Partner API Hardening', updated: '2025-09-12', assets: 2, schedule: '2026-06-10', status: 'Scheduled' },
+  { id: 'EX-1922', name: 'Partner API Hardening', updated: '2025-09-12', assets: 2, schedule: '2026-06-10', status: 'Complete' },
   { id: 'EX-1918', name: 'Customer Identity Review', updated: '2025-09-09', assets: 4, schedule: '2026-05-24', status: 'Complete' },
-  { id: 'EX-1903', name: 'Mobile Checkout Assessment', updated: '2025-09-02', assets: 5, schedule: '2026-04-30', status: 'In progress' },
+  { id: 'EX-1903', name: 'Mobile Checkout Assessment', updated: '2025-09-02', assets: 5, schedule: '2026-04-30', status: 'Complete' },
   { id: 'EX-1897', name: 'Payments Perimeter Assessment', updated: '2025-08-28', assets: 7, schedule: '2026-05-24', status: 'Complete' },
-  { id: 'EX-1880', name: 'Internal Tools Review', updated: '2025-08-21', assets: 1, schedule: '', status: 'Draft' },
+  { id: 'EX-1880', name: 'Internal Tools Review', updated: '2025-08-21', assets: 1, schedule: '2026-05-02', status: 'Complete' },
   { id: 'EX-1874', name: 'Customer Identity Review', updated: '2025-08-19', assets: 4, schedule: '2026-05-24', status: 'Complete' },
-  { id: 'EX-1861', name: 'Marketing Site Assessment', updated: '2025-08-03', assets: 2, schedule: '2026-07-02', status: 'Scheduled' },
+  { id: 'EX-1861', name: 'Marketing Site Assessment', updated: '2025-08-03', assets: 2, schedule: '2026-07-02', status: 'Complete' },
   { id: 'EX-1855', name: 'Customer Identity Review', updated: '2025-07-30', assets: 4, schedule: '2026-05-24', status: 'Complete' },
 ]
 
