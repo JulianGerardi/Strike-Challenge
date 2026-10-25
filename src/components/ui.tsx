@@ -320,3 +320,12 @@ export function Pagination({ page, pageSize, total, onPage, noun }: { page: numb
 export function AssetMark({ name }: { name: string }) {
   return <span className="grid place-items-center size-[28px] bg-brand text-[12px] font-extrabold text-[#171a1c] shrink-0">{name[0]}</span>
 }
+
+export function SelectionChip({ count, onClear, tour }: { count: number; onClear: () => void; tour?: string }) {
+  return (
+    <span data-tour={tour} className={cx('inline-flex items-center gap-[6px] h-[28px] px-[10px] text-[13px] font-semibold transition-colors', count ? 'bg-brand-soft text-[#17575a] border border-[#bde7e9]' : 'text-[#969a9c]')}>
+      {count} {count === 1 ? 'asset' : 'assets'} {t('selected', count === 1 ? 'seleccionado' : 'seleccionados')}
+      {count > 0 && <button onClick={onClear} className="text-[12px] text-[#2b9ea2] hover:underline font-semibold">{t('Clear', 'Limpiar')}</button>}
+    </span>
+  )
+}

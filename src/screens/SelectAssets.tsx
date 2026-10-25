@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Asset } from '../data'
 import { ASSETS } from '../data'
 import { t, tv } from '../i18n'
-import { AssetMark, Badge, Checkbox, PageHeader, Pagination, Td, Th, cx } from '../components/ui'
+import { AssetMark, Badge, Checkbox, PageHeader, Pagination, SelectionChip, Td, Th, cx } from '../components/ui'
 import { TableToolbar, useTableFilters, type FilterGroup } from '../components/TableToolbar'
 
 const PAGE_SIZE = 8
@@ -34,10 +34,7 @@ export function SelectAssets({ selected, setSelected, showErrors }: { selected: 
         groups={GROUPS}
         placeholder={t('Search assets', 'Buscar assets')}
         right={
-          <span data-tour="selection-count" className={cx('inline-flex items-center gap-[6px] h-[28px] px-[10px] text-[13px] font-semibold transition-colors', selected.length ? 'bg-brand-soft text-[#17575a] border border-[#bde7e9]' : 'text-[#969a9c]')}>
-            {selected.length} {selected.length === 1 ? 'asset' : 'assets'} {t('selected', selected.length === 1 ? 'seleccionado' : 'seleccionados')}
-            {selected.length > 0 && <button onClick={() => setSelected([])} className="text-[12px] text-[#2b9ea2] hover:underline font-semibold">{t('Clear', 'Limpiar')}</button>}
-          </span>
+          <SelectionChip tour="selection-count" count={selected.length} onClear={() => setSelected([])} />
         }
       />
       {showErrors && selected.length === 0 && <p className="text-[13px] text-[#c23b3b] -mt-[8px]">{t('Select at least one asset to continue.', 'Seleccioná al menos un asset para continuar.')}</p>}

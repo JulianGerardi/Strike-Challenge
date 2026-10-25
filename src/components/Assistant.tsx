@@ -54,7 +54,7 @@ const GUIDES_ES: Record<GuideId, { title: string; intro: string; steps: TourStep
     intro: 'Los assets heredan la configuración del ejercicio. Podés cambiarla en bloque o asset por asset:',
     steps: [
       { screen: 'configure', target: 'select-all', title: 'Seleccioná los assets', text: 'Marcá la casilla para seleccionar todos (o marcá fila por fila).', click: true },
-      { screen: 'configure', target: 'add-setting', title: 'Abrí la edición masiva', text: 'Hacé clic en “Editar configuración” para cambiar un parámetro en todos los seleccionados.', click: true },
+      { screen: 'configure', target: 'add-setting', title: 'Abrí la edición masiva', text: 'Hacé clic en “Editar seleccionados” para cambiar un parámetro en todos los assets marcados.', click: true },
       { screen: 'configure', target: 'bulk-mode-rateLimit', title: 'Elegí qué cambiar', text: 'En “Rate limit” elegí “Aplicar nuevo” y seleccioná el valor. Lo que dejes en “Mantener” no se toca.' },
       { screen: 'configure', target: 'bulk-save', title: 'Guardá', text: 'Hacé clic en “Guardar cambios”.', click: true },
       { screen: 'configure', target: 'confirm-save', title: 'Confirmá el impacto', text: 'Revisá qué campos y cuántos assets cambian, y confirmá.', click: true },
@@ -94,7 +94,7 @@ const GUIDES_EN: typeof GUIDES_ES = {
     intro: 'Assets inherit the exercise settings. You can change them in bulk or one asset at a time:',
     steps: [
       { screen: 'configure', target: 'select-all', title: 'Select the assets', text: 'Tick the box to select them all (or tick row by row).', click: true },
-      { screen: 'configure', target: 'add-setting', title: 'Open bulk edit', text: 'Click “Add setting” to change a value on every selected asset.', click: true },
+      { screen: 'configure', target: 'add-setting', title: 'Open bulk edit', text: 'Click “Edit selected” to change a value on every checked asset.', click: true },
       { screen: 'configure', target: 'bulk-mode-rateLimit', title: 'Choose what changes', text: 'Under “Rate limit” pick “Apply new” and choose the value. Anything left on “Keep current” stays as it is.' },
       { screen: 'configure', target: 'bulk-save', title: 'Save', text: 'Click “Save changes”.', click: true },
       { screen: 'configure', target: 'confirm-save', title: 'Confirm the impact', text: 'Check which fields and how many assets change, then confirm.', click: true },

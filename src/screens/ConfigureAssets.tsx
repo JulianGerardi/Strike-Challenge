@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Check, Clock, Pencil, SlidersHorizontal, TriangleAlert, X } from 'lucide-react'
 import type { Asset, AssetOverrides, ExerciseDraft, SharedConfig, TimeWindow } from '../data'
 import { ASSETS, EXCLUDABLE_TESTS, RATE_LIMITS, effective, excludedLabel, formatDate, hasOverrides } from '../data'
-import { AssetMark, Badge, Button, Checkbox, FieldLabel, PageHeader, PickerInput, Segmented, Select, Td, Th, cx } from '../components/ui'
+import { AssetMark, Badge, Button, Checkbox, FieldLabel, PageHeader, PickerInput, Segmented, Select, SelectionChip, Td, Th, cx } from '../components/ui'
 import { PixelIcon } from '../components/PixelIcon'
 import { t, tv } from '../i18n'
 import { TableToolbar, useTableFilters, type FilterGroup } from '../components/TableToolbar'
@@ -275,16 +275,6 @@ export function ConfigureAssets({
       <PageHeader
         title={t('Configure assets', 'Configurar assets')}
         caption={t('Review inherited settings, adjust individual assets, and resolve exceptions before testing.', 'Revisá la configuración heredada, ajustá assets puntuales y resolvé excepciones antes del testing.')}
-        action={
-          <div className="relative group">
-            <Button data-tour="add-setting" variant="outline" onClick={onAddSetting} disabled={checked.length === 0} icon={<SlidersHorizontal size={15} strokeWidth={1.75} />}>{t('Add setting', 'Editar configuración')}</Button>
-            {checked.length === 0 && (
-              <span className="pointer-events-none absolute right-0 top-[42px] z-10 w-[220px] px-[10px] py-[8px] bg-ink text-white text-[12px] leading-[17px] opacity-0 group-hover:opacity-100 transition-opacity">
-                {t('Select one or more assets in the table to edit their settings together.', 'Seleccioná uno o más assets de la tabla para editarlos juntos.')}
-              </span>
-            )}
-          </div>
-        }
       />
 
       <div data-tour="defaults" className="flex flex-wrap lg:flex-nowrap items-center gap-x-[18px] gap-y-[12px] px-[16px] py-[14px] bg-[#f7f7f7] border border-[#e2e3e3]">
@@ -310,7 +300,19 @@ export function ConfigureAssets({
         api={api}
         groups={GROUPS}
         placeholder={t('Search assets', 'Buscar assets')}
-        right={checked.length > 0 && <span className="text-[13px] font-semibold text-[#17575a]">{t(`${checked.length} selected for bulk edit`, `${checked.length} ${checked.length === 1 ? 'seleccionado' : 'seleccionados'} para edición masiva`)}</span>}
+        right={
+          <div className="flex flex-wrap items-center gap-[10px]">
+            <SelectionChip count={checked.length} onClear={() => setChecked([])} />
+            <div className="relative group">
+              <Button data-tour="add-setting" variant="outline" onClick={onAddSetting} disabled={checked.length === 0} icon={<SlidersHorizontal size={15} strokeWidth={1.75} />}>{t('Edit selected', 'Editar seleccionados')}</Button>
+              {checked.length === 0 && (
+                <span className="pointer-events-none absolute right-0 top-[42px] z-10 w-[220px] px-[10px] py-[8px] bg-ink text-white text-[12px] leading-[17px] opacity-0 group-hover:opacity-100 transition-opacity">
+                  {t('Select one or more assets in the table to edit their settings together.', 'Seleccioná uno o más assets de la tabla para editarlos juntos.')}
+                </span>
+              )}
+            </div>
+          </div>
+        }
       />
 
       <div data-tour="config-table" className="bg-white border border-[#e5e5e5] rounded-[6px] overflow-hidden">
