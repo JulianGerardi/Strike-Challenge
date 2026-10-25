@@ -245,15 +245,6 @@ const GROUPS: FilterGroup<Row>[] = [
 ]
 const searchOf = (r: Row) => `${r.name} ${r.identifier}`
 
-function Val({ children, custom }: { children: React.ReactNode; custom: boolean }) {
-  return (
-    <div>
-      <p>{children}</p>
-      {custom && <p className="flex items-center gap-[4px] text-[10px] font-semibold text-[#17575a] mt-[1px]"><span className="size-[5px] rounded-full bg-[#2bb9bd]" />{t('Custom override', 'Valor personalizado')}</p>}
-    </div>
-  )
-}
-
 export function ConfigureAssets({
   draft, shared, selectedIds, overrides, checked, setChecked, onAddSetting, onEditAsset, onEditDefaults,
 }: {
@@ -347,11 +338,11 @@ export function ConfigureAssets({
                     </div>
                   </Td>
                   <Td><Badge tone="type">{r.type}</Badge></Td>
-                  <Td><Val custom={r.o.rateLimit !== undefined}>{r.eff.rateLimit} req/s</Val></Td>
-                  <Td><Val custom={r.o.vpnRequired !== undefined}>{tv(vpnText(r.eff.vpnRequired))}</Val></Td>
-                  <Td><Val custom={r.o.excludedTests !== undefined}>{excludedLabel(r.eff.excludedTests)}</Val></Td>
-                  <Td><Val custom={r.o.window !== undefined}>{r.eff.window.start} hs</Val></Td>
-                  <Td><Val custom={r.o.window !== undefined}>{r.eff.window.end} hs</Val></Td>
+                  <Td>{r.eff.rateLimit} req/s</Td>
+                  <Td>{tv(vpnText(r.eff.vpnRequired))}</Td>
+                  <Td>{excludedLabel(r.eff.excludedTests)}</Td>
+                  <Td>{r.eff.window.start} hs</Td>
+                  <Td>{r.eff.window.end} hs</Td>
                   <Td>
                     <button data-tour="edit-asset" onClick={() => onEditAsset(r.id)} aria-label={`${t('Edit', 'Editar')} ${r.name}`} className="grid place-items-center size-[30px] hover:bg-black/5"><Pencil size={17} /></button>
                   </Td>
