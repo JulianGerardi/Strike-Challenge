@@ -12,6 +12,19 @@ export interface Exercise {
   schedule: string
   status: ExerciseStatus
   isNew?: boolean
+  /** What was set up in the flow; seeded rows get one from exerciseSetup(). */
+  setup?: ExerciseSetup
+}
+
+export interface ExerciseSetup {
+  assetIds: string[]
+  depth: Depth
+  startDate: string
+  endDate: string
+  recurrence: string
+  humanValidation: boolean
+  shared: SharedConfig
+  overrides: Record<string, AssetOverrides>
 }
 
 export type AssetType = 'Web application' | 'Mobile application' | 'API'
@@ -156,26 +169,34 @@ export function excludedLabel(list: string[]) {
   return list.length ? list.map(tv).join(', ') : t('None', 'Ninguna')
 }
 
-export interface AssetProfile {
-  description: [string, string]
-  owner: string
-  stack: string
-  region: string
-  lastTested: string
-  findings: { critical: number; high: number; medium: number; low: number }
-}
+const SEED_SCOPES: [RegExp, string[]][] = [
+  [/Payments/, ['a9', 'a4', 'a1', 'a6', 'a2', 'a3', 'a11']],
+  [/Identity/, ['a6', 'a7', 'a8', 'a1']],
+  [/Partner/, ['a10', 'a4']],
+  [/Mobile/, ['a2', 'a3', 'a4', 'a9', 'a5']],
+  [/Marketing/, ['a11', 'a1']],
+  [/Internal/, ['a7']],
+]
 
-/** Static detail shown when a table row is expanded. */
-export const ASSET_PROFILES: Record<string, AssetProfile> = {
-  a1: { description: ['Storefront where customers browse, add to cart and check out.', 'Tienda online donde los clientes navegan, arman el carrito y pagan.'], owner: 'Commerce Platform', stack: 'Next.js · Node 20', region: 'us-east-1', lastTested: '2026-07-14', findings: { critical: 0, high: 1, medium: 3, low: 6 } },
-  a2: { description: ['iOS shopping app with saved cards and push notifications.', 'App de compras para iOS con tarjetas guardadas y notificaciones push.'], owner: 'Mobile', stack: 'Swift · iOS 17+', region: 'App Store', lastTested: '2026-06-02', findings: { critical: 0, high: 0, medium: 2, low: 4 } },
-  a3: { description: ['Android shopping app, same feature set as iOS.', 'App de compras para Android, con las mismas funciones que iOS.'], owner: 'Mobile', stack: 'Kotlin · Android 10+', region: 'Google Play', lastTested: '2026-06-02', findings: { critical: 0, high: 1, medium: 1, low: 3 } },
-  a4: { description: ['Public REST API behind the web and mobile storefronts.', 'API REST pública detrás de la tienda web y las apps.'], owner: 'Commerce Platform', stack: 'Go · REST', region: 'us-east-1', lastTested: '2026-08-21', findings: { critical: 1, high: 2, medium: 2, low: 1 } },
-  a5: { description: ['Staging build of the customer self-service portal.', 'Versión de staging del portal de autogestión de clientes.'], owner: 'Customer Experience', stack: 'React Native', region: 'us-west-2', lastTested: '', findings: { critical: 0, high: 0, medium: 0, low: 0 } },
-  a6: { description: ['Sign-in, tokens and session management for all customer apps.', 'Login, tokens y sesiones para todas las apps de clientes.'], owner: 'Identity', stack: 'Java · OAuth 2.1', region: 'us-east-1', lastTested: '2026-09-05', findings: { critical: 0, high: 1, medium: 4, low: 2 } },
-  a7: { description: ['Back-office console for support agents to manage accounts.', 'Consola interna para que soporte gestione cuentas.'], owner: 'Identity', stack: 'Vue · SSO', region: 'us-east-1', lastTested: '2026-03-18', findings: { critical: 0, high: 2, medium: 1, low: 0 } },
-  a8: { description: ['Staging copy of the Identity API used for integration tests.', 'Copia de staging de Identity API para pruebas de integración.'], owner: 'Identity', stack: 'Java · OAuth 2.1', region: 'us-west-2', lastTested: '', findings: { critical: 0, high: 0, medium: 1, low: 1 } },
-  a9: { description: ['Card authorization, refunds and payouts.', 'Autorización de tarjetas, reembolsos y pagos a comercios.'], owner: 'Payments', stack: 'Go · gRPC', region: 'us-east-1', lastTested: '2026-09-29', findings: { critical: 0, high: 0, medium: 2, low: 5 } },
-  a10: { description: ['Partner onboarding portal, paused while being rebuilt.', 'Portal de alta de partners, pausado mientras se rehace.'], owner: 'Partnerships', stack: 'Rails', region: 'eu-west-1', lastTested: '2025-11-30', findings: { critical: 0, high: 1, medium: 3, low: 2 } },
-  a11: { description: ['Public marketing site and blog.', 'Sitio público de marketing y blog.'], owner: 'Marketing', stack: 'Astro · CDN', region: 'Global CDN', lastTested: '2026-05-10', findings: { critical: 0, high: 0, medium: 1, low: 3 } },
+/** Setup behind a list row. Seeded rows get a stable one derived from their name. */
+export function exerciseSetup(e: Exercise): ExerciseSetup {
+  if (e.setup) return e.setup
+  const pool = SEED_SCOPES.find(([re]) => re.test(e.name))?.[1] ?? ASSETS.map(a => a.id)
+  const assetIds = pool.slice(0, e.assets)
+  const n = Number(e.id.replace(/\D/g, ''))
+  const start = e.schedule
+  const end = start ? new Date(new Date(start + 'T00:00:00').getTime() + 11 * 864e5).toISOString().slice(0, 10) : ''
+  const overrides: Record<string, AssetOverrides> = {}
+  if (assetIds.includes('a2')) overrides.a2 = SEED_OVERRIDES.a2
+  if (assetIds.includes('a4')) overrides.a4 = SEED_OVERRIDES.a4
+  return {
+    assetIds,
+    depth: (['Standard', 'Comprehensive', 'Basic'] as Depth[])[n % 3],
+    startDate: start,
+    endDate: end,
+    recurrence: n % 4 === 0 ? 'Quarterly' : 'Does not repeat',
+    humanValidation: n % 2 === 1,
+    shared: { ...DEFAULT_SHARED, excludedTests: n % 3 === 1 ? ['Social engineering'] : [] },
+    overrides,
+  }
 }

@@ -172,7 +172,7 @@ export default function App() {
       const custom = selected.filter(a => hasOverrides(overrides[a])).length
       setCreated({ id, assets: selected.length, custom })
       setExercises(list => [
-        { id, name: draft.name, updated: 'now', assets: selected.length, schedule: draft.startDate, status: 'Complete', isNew: true },
+        { id, name: draft.name, updated: 'now', assets: selected.length, schedule: draft.startDate, status: 'Complete', isNew: true, setup: { assetIds: selected, depth: draft.depth, startDate: draft.startDate, endDate: draft.endDate, recurrence: draft.recurrence, humanValidation: draft.humanValidation, shared, overrides: Object.fromEntries(selected.filter(a => overrides[a]).map(a => [a, overrides[a]])) } },
         ...list.map(e => ({ ...e, isNew: false })),
       ])
       setHappy(true)

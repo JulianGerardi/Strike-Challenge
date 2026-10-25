@@ -370,7 +370,7 @@ export function DetailRow({ colSpan, children }: { colSpan: number; children: Re
 
 export function DetailItem({ label, children, wide }: { label: string; children: ReactNode; wide?: boolean }) {
   return (
-    <div className={cx('min-w-0', wide && 'sm:col-span-2')}>
+    <div className={cx('min-w-0', wide && 'col-span-2')}>
       <p className="text-[11px] uppercase tracking-[0.4px] text-[#73787a]">{label}</p>
       <div className="mt-[4px] text-[13px] leading-[20px] text-[#24282a]">{children}</div>
     </div>
