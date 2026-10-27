@@ -103,3 +103,14 @@ button:disabled { cursor: not-allowed; }
 @keyframes chat-drop { from { opacity: 0; transform: translateY(-8px) scaleY(.97); } to { opacity: 1; transform: none; } }
 .chat-drop { animation: chat-drop .24s ease-out both; transform-origin: top; }
 @media (prefers-reduced-motion: reduce) { .chat-drop { animation: none; } }
+
+/* "Strike Help" label: shown on mouse hover, keyboard focus, or while the chat is open.
+   Not on tap or click focus, so closing the chat brings the tab back to just the icon. */
+.bot-label { max-width: 0; opacity: 0; margin-left: 0; transition: max-width .3s ease-out, opacity .3s ease-out, margin .3s ease-out; }
+.bot-launcher[aria-expanded="true"] .bot-label,
+.bot-launcher:focus-visible .bot-label { max-width: 140px; opacity: 1; margin-left: 8px; }
+@media (hover: hover) { .bot-launcher:hover .bot-label { max-width: 140px; opacity: 1; margin-left: 8px; } }
+.bot-launcher.is-quiet:not([aria-expanded="true"]) .bot-label { max-width: 0; opacity: 0; margin-left: 0; }
+/* Collapse chevron on the tab while the chat is open. */
+.bot-collapse { max-width: 0; opacity: 0; margin-left: 0; transform: rotate(180deg); transition: max-width .3s ease-out, opacity .3s ease-out, margin .3s ease-out, transform .3s ease-out; }
+.bot-launcher[aria-expanded="true"] .bot-collapse { max-width: 24px; opacity: 1; margin-left: 6px; transform: none; }

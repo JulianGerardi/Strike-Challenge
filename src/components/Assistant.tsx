@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { ArrowRight, Bot, MapPin, MousePointerClick, Send, X } from 'lucide-react'
+import { ArrowRight, Bot, ChevronUp, MapPin, MousePointerClick, Send, X } from 'lucide-react'
 import { STEPS, cx } from './ui'
 import { getLang, t, tv } from '../i18n'
 
@@ -382,6 +382,14 @@ export function Assistant({
 
   const stepIdx = STEP_INDEX[screen]
 
+  // Escape closes the chat (the tab is the visible way to close it).
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, setOpen])
+
   // On wider screens the chat hangs right under the "Strike Help" tab, flush with the edge
   // (or above it when there is no room below).
   const [anchor, setAnchor] = useState<React.CSSProperties | null>(null)
@@ -389,7 +397,14 @@ export function Assistant({
     if (!open) return
     const place = () => {
       const tab = document.querySelector('[data-tour="assistant"]')?.getBoundingClientRect()
-      if (!tab || window.innerWidth < 640) return setAnchor(null)
+      if (!tab) return setAnchor(null)
+      if (window.innerWidth < 640) {
+        // Phones: full width, below the tab (or above it), never covering it.
+        const below = window.innerHeight - tab.bottom - 20
+        if (below >= 320) return setAnchor({ left: 12, right: 12, top: tab.bottom + 8, bottom: 'auto', height: Math.min(540, below) })
+        const above = Math.min(540, tab.top - 20)
+        return setAnchor({ left: 12, right: 12, top: tab.top - 8 - above, bottom: 'auto', height: above })
+      }
       const h = Math.min(540, window.innerHeight - 24)
       const x = side === 'right' ? { right: 0 } : { left: tab.left }
       if (tab.bottom + h <= window.innerHeight - 12) return setAnchor({ ...x, top: tab.bottom, height: h })
@@ -413,7 +428,6 @@ export function Assistant({
               <p className="text-[14px] font-semibold">Strike Bot</p>
               <p className="text-[12px] text-[#9fe9eb]">{t('I’ll guide you step by step', 'Te guío paso a paso')}</p>
             </div>
-            <button onClick={() => setOpen(false)} aria-label={t('Close', 'Cerrar')} className="text-[#c9cccd] hover:text-white"><X size={16} /></button>
           </div>
 
           <div className="px-[14px] py-[9px] bg-white border-b border-[#ececec] shrink-0">
@@ -539,6 +553,8 @@ export function AssistantLauncher({ open, onToggle, hidden, dock, setDock }: { o
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null)
   const ref = useRef<HTMLDivElement>(null)
   const press = useRef<{ x: number; y: number; moved: boolean } | null>(null)
+  // After closing the chat from the tab, show just the icon until the pointer leaves.
+  const [quiet, setQuiet] = useState(false)
 
   useEffect(() => {
     if (drag || open) return
@@ -616,23 +632,22 @@ export function AssistantLauncher({ open, onToggle, hidden, dock, setDock }: { o
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={() => { press.current = null; setDrag(null) }}
-        onClick={() => { if (!press.current?.moved) onToggle(); press.current = null }}
+        onClick={() => { if (!press.current?.moved) { setQuiet(open); onToggle() } press.current = null }}
+        onPointerLeave={() => setQuiet(false)}
         aria-expanded={open}
         aria-label={open ? t('Hide Strike Help', 'Ocultar Strike Help') : 'Strike Help'}
         className={cx(
-          'bot-launcher flex items-center h-[48px] px-[12px] bg-brand text-ink shadow-[0_8px_24px_rgba(17,19,21,.2)] transition-colors hover:bg-[#6edadd] touch-none',
+          'bot-launcher flex items-center h-[48px]',
+          quiet && 'is-quiet',
+          'px-[12px] bg-brand text-ink shadow-[0_8px_24px_rgba(17,19,21,.2)] transition-colors hover:bg-[#6edadd] touch-none',
           drag ? 'cursor-grabbing rounded-[12px] scale-105' : cx('cursor-pointer', right ? 'rounded-l-[12px]' : 'rounded-r-[12px]'),
         )}
       >
         <span className="bot-swap grid place-items-center"><BotFace /></span>
-        <span
-          className={cx(
-            'overflow-hidden whitespace-nowrap font-fono font-bold text-[13px] uppercase tracking-[0.3px] transition-[max-width,opacity,margin] duration-300 ease-out',
-            open ? 'max-w-[140px] opacity-100 ml-[8px]' : 'max-w-0 opacity-0 ml-0 group-hover:max-w-[140px] group-hover:opacity-100 group-hover:ml-[8px] group-focus-within:max-w-[140px] group-focus-within:opacity-100 group-focus-within:ml-[8px]',
-          )}
-        >
+        <span className="bot-label overflow-hidden whitespace-nowrap font-fono font-bold text-[13px] uppercase tracking-[0.3px]">
           Strike Help
         </span>
+        <span className="bot-collapse grid place-items-center overflow-hidden" aria-hidden><ChevronUp size={18} strokeWidth={2.2} /></span>
       </button>
     </div>
   )
