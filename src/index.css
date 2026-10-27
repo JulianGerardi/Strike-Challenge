@@ -99,3 +99,7 @@ button:disabled { cursor: not-allowed; }
 @keyframes row-detail { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 .row-detail { animation: row-detail .22s ease-out both; }
 @media (prefers-reduced-motion: reduce) { .row-detail { animation: none; } }
+
+@keyframes chat-drop { from { opacity: 0; transform: translateY(-8px) scaleY(.97); } to { opacity: 1; transform: none; } }
+.chat-drop { animation: chat-drop .24s ease-out both; transform-origin: top; }
+@media (prefers-reduced-motion: reduce) { .chat-drop { animation: none; } }

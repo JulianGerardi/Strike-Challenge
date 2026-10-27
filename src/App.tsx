@@ -42,6 +42,9 @@ export default function App() {
   const [created, setCreated] = useState<{ id: string; assets: number; custom: number } | null>(null)
   const [happy, setHappy] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
+  // Each time the user closes the chat, the next one starts from the welcome message.
+  const [chatSession, setChatSession] = useState(0)
+  const closeChat = () => { setChatOpen(false); setChatSession(n => n + 1) }
   const [tour, setTour] = useState<{ guide: GuideId; index: number } | null>(null)
   // Set when a step is opened to edit something from a later screen; saving returns there.
   const [returnTo, setReturnTo] = useState<Screen | null>(null)
@@ -306,7 +309,7 @@ export default function App() {
           )}
         </div>
       </Shell>
-      <AssistantLauncher open={chatOpen} hidden={chatOpen || !!tour || !!bulk || !!drawer || discarding} dock={dock} setDock={setDock} onClose={() => setChatOpen(false)} onToggle={() => setChatOpen(true)} />
+      <AssistantLauncher open={chatOpen} hidden={!!tour || !!bulk || !!drawer || discarding} dock={dock} setDock={setDock} onToggle={() => (chatOpen ? closeChat() : setChatOpen(true))} />
 
       {toast && (
         <div role="status" className="fade-up fixed z-40 bottom-[16px] left-[12px] md:left-[112px] flex items-center gap-[10px] w-[min(344px,calc(100vw-24px))] min-h-[37px] py-[8px] px-[12px] bg-[#e8f8ef] border border-[#c4ecd6] text-[13px] font-semibold">
@@ -358,7 +361,7 @@ export default function App() {
         </Modal>
       )}
 
-      <Assistant open={chatOpen} setOpen={setChatOpen} side={dock.side} screen={screen} tour={tour} onStartTour={startTour} />
+      <Assistant key={chatSession} open={chatOpen} setOpen={v => (v ? setChatOpen(true) : closeChat())} side={dock.side} screen={screen} tour={tour} onStartTour={startTour} />
       {tour && (
         <TourOverlay
           step={guides()[tour.guide].steps[tour.index]}

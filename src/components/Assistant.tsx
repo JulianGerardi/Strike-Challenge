@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { ArrowLeftToLine, ArrowRight, ArrowRightToLine, Bot, MapPin, MousePointerClick, Send, X } from 'lucide-react'
+import { ArrowRight, Bot, MapPin, MousePointerClick, Send, X } from 'lucide-react'
 import { STEPS, cx } from './ui'
 import { getLang, t, tv } from '../i18n'
 
@@ -317,13 +317,6 @@ export function Assistant({
 }) {
   const idRef = useRef(1)
   const [msgs, setMsgs] = useState<Msg[]>(() => [WELCOME])
-  // Closing the chat starts the next one from scratch.
-  const close = () => {
-    setOpen(false)
-    setMsgs([WELCOME])
-    setTyping(false)
-    setInput('')
-  }
   const [typing, setTyping] = useState(false)
   const [input, setInput] = useState('')
   const listRef = useRef<HTMLDivElement>(null)
@@ -389,19 +382,38 @@ export function Assistant({
 
   const stepIdx = STEP_INDEX[screen]
 
+  // On wider screens the chat hangs right under the "Strike Help" tab, flush with the edge
+  // (or above it when there is no room below).
+  const [anchor, setAnchor] = useState<React.CSSProperties | null>(null)
+  useLayoutEffect(() => {
+    if (!open) return
+    const place = () => {
+      const tab = document.querySelector('[data-tour="assistant"]')?.getBoundingClientRect()
+      if (!tab || window.innerWidth < 640) return setAnchor(null)
+      const h = Math.min(540, window.innerHeight - 24)
+      const x = side === 'right' ? { right: 0 } : { left: tab.left }
+      if (tab.bottom + h <= window.innerHeight - 12) return setAnchor({ ...x, top: tab.bottom, height: h })
+      if (tab.top - h >= 12) return setAnchor({ ...x, top: tab.top - h, height: h })
+      setAnchor({ ...x, top: Math.max(12, window.innerHeight - h - 12), height: h })
+    }
+    place()
+    window.addEventListener('resize', place)
+    return () => window.removeEventListener('resize', place)
+  }, [open, side])
+
   return (
     <>
 
       {open && (
-        <div className={cx('fixed z-50 inset-x-[12px] bottom-[12px] sm:inset-x-auto sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2', side === 'right' ? 'sm:right-[16px]' : 'sm:left-[16px] md:left-[88px]')}>
-        <div role="dialog" aria-label="Strike Bot" className="chat-pop w-full sm:w-[360px] h-[540px] max-h-[calc(100dvh-96px)] sm:max-h-[calc(100dvh-32px)] flex flex-col bg-[#fafafa] shadow-[0_24px_64px_rgba(17,19,21,.28)] border border-[#e5e5e5] rounded-[14px] overflow-hidden">
+        <div className="fixed z-50 inset-x-[12px] bottom-[12px] sm:inset-x-auto sm:bottom-auto" style={anchor ? { ...anchor, height: undefined } : undefined}>
+        <div role="dialog" aria-label="Strike Bot" className={cx('chat-drop w-full sm:w-[380px] h-[540px] max-h-[calc(100dvh-96px)] flex flex-col bg-[#fafafa] shadow-[0_24px_64px_rgba(17,19,21,.28)] border border-[#e5e5e5] overflow-hidden rounded-[14px]', side === 'right' ? 'sm:rounded-r-none' : 'sm:rounded-l-none', anchor && 'max-h-none')} style={anchor ? { height: anchor.height } : undefined}>
           <div className="flex items-center gap-[10px] px-[14px] h-[54px] bg-[#111315] text-white shrink-0">
             <span className="grid place-items-center size-[30px] bg-brand text-ink"><Bot size={17} /></span>
             <div className="flex-1">
               <p className="text-[14px] font-semibold">Strike Bot</p>
               <p className="text-[12px] text-[#9fe9eb]">{t('I’ll guide you step by step', 'Te guío paso a paso')}</p>
             </div>
-            <button onClick={close} aria-label={t('Close', 'Cerrar')} className="text-[#c9cccd] hover:text-white"><X size={16} /></button>
+            <button onClick={() => setOpen(false)} aria-label={t('Close', 'Cerrar')} className="text-[#c9cccd] hover:text-white"><X size={16} /></button>
           </div>
 
           <div className="px-[14px] py-[9px] bg-white border-b border-[#ececec] shrink-0">
@@ -471,18 +483,17 @@ function BotFace() {
 }
 
 const INTERACTIVE = 'button, a, input, select, textarea, label, [role="checkbox"], [role="switch"], [role="radio"]'
-const SIZE = 52
+const TAB = 48
 
-/** Where the launcher lives: which edge, how far down (0–1 of the viewport), and whether it is tucked away. */
-export interface BotDock { side: 'left' | 'right'; y: number; tucked: boolean }
-const DOCK_KEY = 'strike-bot-dock'
+export interface BotDock { side: 'left' | 'right'; y: number }
+const DOCK_KEY = 'strike-bot-tab'
 
 export function loadDock(): BotDock {
   try {
     const d = JSON.parse(localStorage.getItem(DOCK_KEY) ?? 'null')
-    if (d && (d.side === 'left' || d.side === 'right') && typeof d.y === 'number') return { side: d.side, y: d.y, tucked: !!d.tucked }
+    if (d && (d.side === 'left' || d.side === 'right') && typeof d.y === 'number') return { side: d.side, y: d.y }
   } catch { /* storage unavailable */ }
-  return { side: 'right', y: 0.5, tucked: false }
+  return { side: 'right', y: 0.3 }
 }
 
 export function saveDock(d: BotDock) {
@@ -490,7 +501,7 @@ export function saveDock(d: BotDock) {
 }
 
 // Left edge of the usable area: the sidebar is only there on wide screens.
-const leftInset = () => (document.querySelector('aside')?.getBoundingClientRect().right ?? 0) + 16
+const leftEdge = () => document.querySelector('aside')?.getBoundingClientRect().right ?? 0
 
 /** Is there readable text right under (x, y)? Uses the caret API so blank space inside a cell doesn't count. */
 function textAt(x: number, y: number) {
@@ -518,27 +529,26 @@ function textAt(x: number, y: number) {
 }
 
 /**
- * Floating launcher. It starts on the right at mid-height, can be dragged to either edge
- * (it snaps to the nearest one and remembers the spot) and tucked into a small tab.
- * Wherever it sits, it slides to the nearest free spot when text or a control of the page is
- * underneath, so it never covers information or an action. It steps aside during a tour.
+ * "Strike Help" tab pinned to the edge of the screen. Hovering shows its name, clicking opens
+ * the chat right under it, and clicking it again hides the chat. It can be dragged along either
+ * edge (it snaps to the nearest one and remembers the spot), and while the chat is closed it
+ * slides to the nearest free spot when text or a control is underneath. It steps aside during a tour.
  */
-export function AssistantLauncher({ open, onToggle, onClose, hidden, dock, setDock }: { open: boolean; onToggle: () => void; onClose: () => void; hidden?: boolean; dock: BotDock; setDock: (d: BotDock) => void }) {
+export function AssistantLauncher({ open, onToggle, hidden, dock, setDock }: { open: boolean; onToggle: () => void; hidden?: boolean; dock: BotDock; setDock: (d: BotDock) => void }) {
   const [shift, setShift] = useState(0)
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null)
   const ref = useRef<HTMLDivElement>(null)
   const press = useRef<{ x: number; y: number; moved: boolean } | null>(null)
 
   useEffect(() => {
-    if (dock.tucked || drag) return
+    if (drag || open) return
     let raf = 0
     const blocked = (offset: number) => {
-      const cx = dock.side === 'right' ? window.innerWidth - 16 - SIZE / 2 : leftInset() + SIZE / 2
+      const cx = dock.side === 'right' ? window.innerWidth - TAB / 2 : leftEdge() + TAB / 2
       const cy = window.innerHeight * dock.y + offset
-      if (cy - SIZE / 2 < 56 || cy + SIZE / 2 > window.innerHeight - 8) return true
-      for (let dx = -24; dx <= 24; dx += 12) {
-        for (let dy = -24; dy <= 24; dy += 12) {
-          if (dx * dx + dy * dy > 27 * 27) continue
+      if (cy - TAB / 2 < 56 || cy + TAB / 2 > window.innerHeight - 8) return true
+      for (let dx = -20; dx <= 20; dx += 10) {
+        for (let dy = -20; dy <= 20; dy += 10) {
           const x = cx + dx, y = cy + dy
           if (textAt(x, y)) return true
           if (document.elementsFromPoint(x, y).some(el => !!el.closest(INTERACTIVE) && !el.closest('[role="dialog"]'))) return true
@@ -550,7 +560,7 @@ export function AssistantLauncher({ open, onToggle, onClose, hidden, dock, setDo
       raf = 0
       const el = ref.current
       if (!el) return
-      el.style.pointerEvents = 'none' // look at what is underneath, not at the launcher itself
+      el.style.pointerEvents = 'none' // look at what is underneath, not at the tab itself
       try {
         for (let step = 0; step * 24 <= window.innerHeight; step++) {
           for (const off of step ? [-step * 24, step * 24] : [0]) {
@@ -567,22 +577,7 @@ export function AssistantLauncher({ open, onToggle, onClose, hidden, dock, setDo
     window.addEventListener('resize', queue)
     const iv = window.setInterval(queue, 500)
     return () => { window.removeEventListener('scroll', queue); window.removeEventListener('resize', queue); window.clearInterval(iv); cancelAnimationFrame(raf) }
-  }, [dock, drag])
-
-  if (dock.tucked) {
-    return (
-      <button
-        data-tour="assistant"
-        onClick={() => setDock({ ...dock, tucked: false })}
-        aria-label={t('Show assistant', 'Mostrar asistente')}
-        title={t('Show assistant', 'Mostrar asistente')}
-        className={cx('fade-up fixed z-50 grid place-items-center w-[22px] h-[56px] bg-brand shadow-[0_6px_18px_rgba(17,19,21,.18)] hover:w-[28px] transition-[width]', dock.side === 'right' ? 'right-0 rounded-l-[12px]' : 'left-0 rounded-r-[12px]')}
-        style={{ top: `calc(${dock.y * 100}% - 28px)` }}
-      >
-        <Bot size={14} />
-      </button>
-    )
-  }
+  }, [dock, drag, open])
 
   const onPointerDown = (e: React.PointerEvent) => {
     press.current = { x: e.clientX, y: e.clientY, moved: false }
@@ -600,13 +595,14 @@ export function AssistantLauncher({ open, onToggle, onClose, hidden, dock, setDo
     if (p?.moved) {
       const y = Math.min(0.9, Math.max(0.12, e.clientY / window.innerHeight))
       setShift(0)
-      setDock({ ...dock, side: e.clientX < window.innerWidth / 2 ? 'left' : 'right', y })
+      setDock({ side: e.clientX < window.innerWidth / 2 ? 'left' : 'right', y })
     }
     setDrag(null)
   }
 
-  const docked = { top: `${dock.y * 100}%`, transform: `translateY(calc(-50% + ${shift}px))${hidden ? ' scale(.6)' : ''}`, ...(dock.side === 'right' ? { right: 16 } : { left: leftInset() }) }
-  const dragging = drag ? { left: drag.x - SIZE / 2, top: drag.y - SIZE / 2 } : null
+  const right = dock.side === 'right'
+  const docked = { top: `${dock.y * 100}%`, transform: `translateY(calc(-50% + ${shift}px))`, ...(right ? { right: 0 } : { left: leftEdge() }) }
+  const dragging = drag ? { left: drag.x - TAB / 2, top: drag.y - TAB / 2 } : null
 
   return (
     <div
@@ -621,32 +617,23 @@ export function AssistantLauncher({ open, onToggle, onClose, hidden, dock, setDo
         onPointerUp={onPointerUp}
         onPointerCancel={() => { press.current = null; setDrag(null) }}
         onClick={() => { if (!press.current?.moved) onToggle(); press.current = null }}
-        aria-label={t('Open Strike Bot', 'Abrir Strike Bot')}
-        className={cx('peer/launch bot-launcher relative grid place-items-center size-[52px] rounded-full bg-brand shadow-[0_10px_28px_rgba(17,19,21,.22)] transition-colors hover:bg-[#6edadd] touch-none', drag ? 'cursor-grabbing scale-110' : 'cursor-grab', !open && !drag && 'is-floating')}
+        aria-expanded={open}
+        aria-label={open ? t('Hide Strike Help', 'Ocultar Strike Help') : 'Strike Help'}
+        className={cx(
+          'bot-launcher flex items-center h-[48px] px-[12px] bg-brand text-ink shadow-[0_8px_24px_rgba(17,19,21,.2)] transition-colors hover:bg-[#6edadd] touch-none',
+          drag ? 'cursor-grabbing rounded-[12px] scale-105' : cx('cursor-pointer', right ? 'rounded-l-[12px]' : 'rounded-r-[12px]'),
+        )}
       >
-        <span className="bot-ping absolute inset-0 rounded-full" />
-        <BotFace />
-      </button>
-      {!drag && (
-        <span role="tooltip" className={cx('pointer-events-none absolute top-1/2 -translate-y-1/2 whitespace-nowrap px-[10px] py-[6px] bg-ink text-white text-[13px] font-semibold opacity-0 peer-hover/launch:opacity-100 peer-focus-visible/launch:opacity-100 transition-opacity [@media(hover:none)]:hidden', dock.side === 'right' ? 'right-[64px]' : 'left-[64px]')}>
-          Strike Bot
+        <span className="bot-swap grid place-items-center"><BotFace /></span>
+        <span
+          className={cx(
+            'overflow-hidden whitespace-nowrap font-fono font-bold text-[13px] uppercase tracking-[0.3px] transition-[max-width,opacity,margin] duration-300 ease-out',
+            open ? 'max-w-[140px] opacity-100 ml-[8px]' : 'max-w-0 opacity-0 ml-0 group-hover:max-w-[140px] group-hover:opacity-100 group-hover:ml-[8px] group-focus-within:max-w-[140px] group-focus-within:opacity-100 group-focus-within:ml-[8px]',
+          )}
+        >
+          Strike Help
         </span>
-      )}
-      {!drag && (
-        // "Send to the edge" control: tucks the launcher into a tab on its side of the screen.
-        <div className={cx('absolute -top-[6px] opacity-0 group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity', dock.side === 'right' ? '-left-[6px]' : '-right-[6px]')}>
-          <button
-            onClick={() => { onClose(); setDock({ ...dock, tucked: true }) }}
-            aria-label={t('Hide assistant', 'Ocultar asistente')}
-            className="peer grid place-items-center size-[24px] rounded-full bg-ink text-white shadow-[0_2px_6px_rgba(17,19,21,.25)] hover:bg-[#2b3033]"
-          >
-            {dock.side === 'right' ? <ArrowRightToLine size={13} strokeWidth={2.2} /> : <ArrowLeftToLine size={13} strokeWidth={2.2} />}
-          </button>
-          <span role="tooltip" className={cx('pointer-events-none absolute top-1/2 -translate-y-1/2 whitespace-nowrap px-[8px] py-[5px] bg-ink text-white text-[12px] font-medium opacity-0 peer-hover:opacity-100 peer-focus-visible:opacity-100 transition-opacity', dock.side === 'right' ? 'right-[30px]' : 'left-[30px]')}>
-            {t('Hide assistant', 'Ocultar asistente')}
-          </span>
-        </div>
-      )}
+      </button>
     </div>
   )
 }
