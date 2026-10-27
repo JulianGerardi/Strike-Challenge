@@ -306,7 +306,7 @@ export default function App() {
           )}
         </div>
       </Shell>
-      <AssistantLauncher open={chatOpen} hidden={!!tour || !!bulk || !!drawer || discarding} dock={dock} setDock={setDock} onClose={() => setChatOpen(false)} onToggle={() => setChatOpen(!chatOpen)} />
+      <AssistantLauncher open={chatOpen} hidden={chatOpen || !!tour || !!bulk || !!drawer || discarding} dock={dock} setDock={setDock} onClose={() => setChatOpen(false)} onToggle={() => setChatOpen(true)} />
 
       {toast && (
         <div role="status" className="fade-up fixed z-40 bottom-[16px] left-[12px] md:left-[112px] flex items-center gap-[10px] w-[min(344px,calc(100vw-24px))] min-h-[37px] py-[8px] px-[12px] bg-[#e8f8ef] border border-[#c4ecd6] text-[13px] font-semibold">

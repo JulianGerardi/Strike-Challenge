@@ -302,6 +302,12 @@ function GuideCard({ guide, screen, tourIndex, onStart, onJump }: { guide: Guide
   )
 }
 
+const WELCOME: Msg = {
+  id: 0,
+  from: 'bot',
+  say: () => t('Hi Sarah! 👋 I’m Strike Bot. I can show you how to create an exercise and how to apply its settings to the assets, highlighting each step on screen.', '¡Hola Sarah! 👋 Soy Strike Bot. Te puedo mostrar cómo crear un ejercicio y cómo aplicar su configuración a los assets, marcándote en pantalla cada paso.'),
+}
+
 export function Assistant({
   open, setOpen, screen, tour, onStartTour, side = 'right',
 }: {
@@ -310,9 +316,14 @@ export function Assistant({
   onStartTour: (guide: GuideId, index: number) => void
 }) {
   const idRef = useRef(1)
-  const [msgs, setMsgs] = useState<Msg[]>(() => [
-    { id: 0, from: 'bot', say: () => t('Hi Sarah! 👋 I’m the Strike assistant. I can show you how to create an exercise and how to apply its settings to the assets, highlighting each step on screen.', '¡Hola Sarah! 👋 Soy el asistente de Strike. Te puedo mostrar cómo crear un ejercicio y cómo aplicar su configuración a los assets, marcándote en pantalla cada paso.') },
-  ])
+  const [msgs, setMsgs] = useState<Msg[]>(() => [WELCOME])
+  // Closing the chat starts the next one from scratch.
+  const close = () => {
+    setOpen(false)
+    setMsgs([WELCOME])
+    setTyping(false)
+    setInput('')
+  }
   const [typing, setTyping] = useState(false)
   const [input, setInput] = useState('')
   const listRef = useRef<HTMLDivElement>(null)
@@ -382,15 +393,15 @@ export function Assistant({
     <>
 
       {open && (
-        <div className={cx('fixed z-50 inset-x-[12px] bottom-[12px] sm:inset-x-auto sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2', side === 'right' ? 'sm:right-[84px]' : 'sm:left-[84px] md:left-[160px]')}>
-        <div role="dialog" aria-label={t('Strike assistant', 'Asistente de Strike')} className="chat-pop w-full sm:w-[360px] h-[540px] max-h-[calc(100dvh-96px)] sm:max-h-[calc(100dvh-32px)] flex flex-col bg-[#fafafa] shadow-[0_24px_64px_rgba(17,19,21,.28)] border border-[#e5e5e5] rounded-[14px] overflow-hidden">
+        <div className={cx('fixed z-50 inset-x-[12px] bottom-[12px] sm:inset-x-auto sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2', side === 'right' ? 'sm:right-[16px]' : 'sm:left-[16px] md:left-[88px]')}>
+        <div role="dialog" aria-label="Strike Bot" className="chat-pop w-full sm:w-[360px] h-[540px] max-h-[calc(100dvh-96px)] sm:max-h-[calc(100dvh-32px)] flex flex-col bg-[#fafafa] shadow-[0_24px_64px_rgba(17,19,21,.28)] border border-[#e5e5e5] rounded-[14px] overflow-hidden">
           <div className="flex items-center gap-[10px] px-[14px] h-[54px] bg-[#111315] text-white shrink-0">
             <span className="grid place-items-center size-[30px] bg-brand text-ink"><Bot size={17} /></span>
             <div className="flex-1">
-              <p className="text-[14px] font-semibold">Strike Assistant</p>
+              <p className="text-[14px] font-semibold">Strike Bot</p>
               <p className="text-[12px] text-[#9fe9eb]">{t('I’ll guide you step by step', 'Te guío paso a paso')}</p>
             </div>
-            <button onClick={() => setOpen(false)} aria-label={t('Close', 'Cerrar')} className="text-[#c9cccd] hover:text-white"><X size={16} /></button>
+            <button onClick={close} aria-label={t('Close', 'Cerrar')} className="text-[#c9cccd] hover:text-white"><X size={16} /></button>
           </div>
 
           <div className="px-[14px] py-[9px] bg-white border-b border-[#ececec] shrink-0">
@@ -610,13 +621,17 @@ export function AssistantLauncher({ open, onToggle, onClose, hidden, dock, setDo
         onPointerUp={onPointerUp}
         onPointerCancel={() => { press.current = null; setDrag(null) }}
         onClick={() => { if (!press.current?.moved) onToggle(); press.current = null }}
-        aria-label={open ? t('Close assistant', 'Cerrar asistente') : t('Open assistant', 'Abrir asistente')}
-        title={t('Drag to move', 'Arrastrá para moverlo')}
-        className={cx('bot-launcher relative grid place-items-center size-[52px] rounded-full bg-brand shadow-[0_10px_28px_rgba(17,19,21,.22)] transition-colors hover:bg-[#6edadd] touch-none', drag ? 'cursor-grabbing scale-110' : 'cursor-grab', !open && !drag && 'is-floating')}
+        aria-label={t('Open Strike Bot', 'Abrir Strike Bot')}
+        className={cx('peer/launch bot-launcher relative grid place-items-center size-[52px] rounded-full bg-brand shadow-[0_10px_28px_rgba(17,19,21,.22)] transition-colors hover:bg-[#6edadd] touch-none', drag ? 'cursor-grabbing scale-110' : 'cursor-grab', !open && !drag && 'is-floating')}
       >
         <span className="bot-ping absolute inset-0 rounded-full" />
-        <span key={open ? 'x' : 'bot'} className="bot-swap grid place-items-center">{open ? <X size={22} /> : <BotFace />}</span>
+        <BotFace />
       </button>
+      {!drag && (
+        <span role="tooltip" className={cx('pointer-events-none absolute top-1/2 -translate-y-1/2 whitespace-nowrap px-[10px] py-[6px] bg-ink text-white text-[13px] font-semibold opacity-0 peer-hover/launch:opacity-100 peer-focus-visible/launch:opacity-100 transition-opacity [@media(hover:none)]:hidden', dock.side === 'right' ? 'right-[64px]' : 'left-[64px]')}>
+          Strike Bot
+        </span>
+      )}
       {!drag && (
         // "Send to the edge" control: tucks the launcher into a tab on its side of the screen.
         <div className={cx('absolute -top-[6px] opacity-0 group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity', dock.side === 'right' ? '-left-[6px]' : '-right-[6px]')}>
