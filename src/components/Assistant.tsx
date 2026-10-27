@@ -382,12 +382,18 @@ export function Assistant({
 
   const stepIdx = STEP_INDEX[screen]
 
-  // Escape closes the chat (the tab is the visible way to close it).
+  // Escape or a click/tap anywhere outside the chat and its tab closes it.
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    const onDown = (e: PointerEvent) => {
+      const el = e.target as Element | null
+      if (el?.closest('[role="dialog"][aria-label="Strike Bot"], [data-tour="assistant"]')) return
+      setOpen(false)
+    }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    document.addEventListener('pointerdown', onDown)
+    return () => { window.removeEventListener('keydown', onKey); document.removeEventListener('pointerdown', onDown) }
   }, [open, setOpen])
 
   // On wider screens the chat hangs right under the "Strike Help" tab, flush with the edge
