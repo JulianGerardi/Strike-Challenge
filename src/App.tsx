@@ -57,6 +57,7 @@ export default function App() {
   }
   // True when the tour itself took the user from the list into the flow: closing it should take them back.
   const tourFromHome = useRef(false)
+  const tourFromChat = useRef(false)
 
   const shared: SharedConfig = useMemo(
     () => ({ ...DEFAULT_SHARED, window: { start: draft.startTime || DEFAULT_SHARED.window.start, end: draft.endTime || DEFAULT_SHARED.window.end } }),
@@ -87,6 +88,7 @@ export default function App() {
 
   const startTour = useCallback(
     (guide: GuideId, index: number) => {
+      if (!tour) tourFromChat.current = chatOpen
       setChatOpen(false)
       setBulk(null)
       setConfirming(false)
@@ -96,7 +98,7 @@ export default function App() {
       const s = guides()[guide].steps[index].screen
       if (s !== screen) go(s)
     },
-    [go, screen, tour],
+    [go, screen, tour, chatOpen],
   )
 
   const moveTour = useCallback(
@@ -211,6 +213,9 @@ export default function App() {
     setTour(null)
     if (tourFromHome.current && screen !== 'list' && screen !== 'created') discardExercise()
     tourFromHome.current = false
+    // The chat was only set aside for the tour: bring it back as it was.
+    if (tourFromChat.current) setChatOpen(true)
+    tourFromChat.current = false
   }
 
   const resetFlow = () => {
